@@ -13,5 +13,10 @@
 ##
 
     build.namespace=RemoteWebComponent
+<<<<<<< HEAD
+    build.number=1
+    build.date=1599133122499
+=======
     build.number=6
     build.date=1599237763036
+>>>>>>> 5cece99... remote-web-component unmodified

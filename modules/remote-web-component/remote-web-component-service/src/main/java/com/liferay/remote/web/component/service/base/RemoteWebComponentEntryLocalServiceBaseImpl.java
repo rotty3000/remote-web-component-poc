@@ -19,7 +19,6 @@ import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -40,7 +39,6 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
-import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -81,10 +79,6 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 	/**
 	 * Adds the remote web component entry to the database. Also notifies the appropriate model listeners.
 	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
-	 *
 	 * @param remoteWebComponentEntry the remote web component entry
 	 * @return the remote web component entry that was added
 	 */
@@ -117,10 +111,6 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the remote web component entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
-	 *
 	 * @param remoteWebComponentEntryId the primary key of the remote web component entry
 	 * @return the remote web component entry that was removed
 	 * @throws PortalException if a remote web component entry with the primary key could not be found
@@ -138,10 +128,6 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the remote web component entry from the database. Also notifies the appropriate model listeners.
 	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
-	 *
 	 * @param remoteWebComponentEntry the remote web component entry
 	 * @return the remote web component entry that was removed
 	 */
@@ -152,11 +138,6 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 
 		return remoteWebComponentEntryPersistence.remove(
 			remoteWebComponentEntry);
-	}
-
-	@Override
-	public <T> T dslQuery(DSLQuery dslQuery) {
-		return remoteWebComponentEntryPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -407,16 +388,6 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
-	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
-		throws PortalException {
-
-		return remoteWebComponentEntryPersistence.create(
-			((Long)primaryKeyObj).longValue());
-	}
-
-	/**
-	 * @throws PortalException
-	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
@@ -426,13 +397,6 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 				(RemoteWebComponentEntry)persistedModel);
 	}
 
-	public BasePersistence<RemoteWebComponentEntry> getBasePersistence() {
-		return remoteWebComponentEntryPersistence;
-	}
-
-	/**
-	 * @throws PortalException
-	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
@@ -488,10 +452,6 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 
 	/**
 	 * Updates the remote web component entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
-	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
 	 *
 	 * @param remoteWebComponentEntry the remote web component entry
 	 * @return the remote web component entry that was updated
@@ -557,8 +517,8 @@ public abstract class RemoteWebComponentEntryLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception exception) {
-			throw new SystemException(exception);
+		catch (Exception e) {
+			throw new SystemException(e);
 		}
 	}
 

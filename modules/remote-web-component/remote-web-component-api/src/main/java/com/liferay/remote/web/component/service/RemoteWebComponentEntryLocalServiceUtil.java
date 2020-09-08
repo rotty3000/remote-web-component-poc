@@ -51,10 +51,6 @@ public class RemoteWebComponentEntryLocalServiceUtil {
 	/**
 	 * Adds the remote web component entry to the database. Also notifies the appropriate model listeners.
 	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
-	 *
 	 * @param remoteWebComponentEntry the remote web component entry
 	 * @return the remote web component entry that was added
 	 */
@@ -64,16 +60,6 @@ public class RemoteWebComponentEntryLocalServiceUtil {
 				remoteWebComponentEntry) {
 
 		return getService().addRemoteWebComponentEntry(remoteWebComponentEntry);
-	}
-
-	/**
-	 * @throws PortalException
-	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	/**
@@ -103,10 +89,6 @@ public class RemoteWebComponentEntryLocalServiceUtil {
 	/**
 	 * Deletes the remote web component entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
-	 *
 	 * @param remoteWebComponentEntryId the primary key of the remote web component entry
 	 * @return the remote web component entry that was removed
 	 * @throws PortalException if a remote web component entry with the primary key could not be found
@@ -122,10 +104,6 @@ public class RemoteWebComponentEntryLocalServiceUtil {
 	/**
 	 * Deletes the remote web component entry from the database. Also notifies the appropriate model listeners.
 	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
-	 *
 	 * @param remoteWebComponentEntry the remote web component entry
 	 * @return the remote web component entry that was removed
 	 */
@@ -136,12 +114,6 @@ public class RemoteWebComponentEntryLocalServiceUtil {
 
 		return getService().deleteRemoteWebComponentEntry(
 			remoteWebComponentEntry);
-	}
-
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
-		return getService().dslQuery(dslQuery);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
@@ -281,9 +253,6 @@ public class RemoteWebComponentEntryLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
-	/**
-	 * @throws PortalException
-	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -382,10 +351,6 @@ public class RemoteWebComponentEntryLocalServiceUtil {
 
 	/**
 	 * Updates the remote web component entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
-	 *
-	 * <p>
-	 * <strong>Important:</strong> Inspect RemoteWebComponentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
-	 * </p>
 	 *
 	 * @param remoteWebComponentEntry the remote web component entry
 	 * @return the remote web component entry that was updated

@@ -1,7 +1,9 @@
 dependencies {
-	testIntegrationCompile group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
-	testIntegrationCompile project(":apps:portal-configuration:portal-configuration-test-util")
-	testIntegrationCompile project(":apps:remote-web-component:remote-web-component-api")
-	testIntegrationCompile project(":core:petra:petra-string")
-	testIntegrationCompile project(":test:arquillian-extension-junit-bridge")
+	testIntegrationCompile group: "com.liferay", name: "com.liferay.arquillian.extension.junit.bridge", version: "1.0.19"
+	testIntegrationCompile group: "com.liferay", name: "com.liferay.petra.string"
+	testIntegrationCompile group: "com.liferay", name: "com.liferay.portal.configuration.test.util"
+	testIntegrationCompile group: "com.liferay.portal", name: "com.liferay.portal.test", version: "4.4.1"
+	testIntegrationCompile group: "com.liferay.portal", name: "com.liferay.portal.test.integration", version: "4.2.8"
+	testIntegrationCompile group: "com.liferay.portal", name: "com.liferay.portal.kernel"
+	testIntegrationCompile project(":modules:remote-web-component:remote-web-component-api")
 }

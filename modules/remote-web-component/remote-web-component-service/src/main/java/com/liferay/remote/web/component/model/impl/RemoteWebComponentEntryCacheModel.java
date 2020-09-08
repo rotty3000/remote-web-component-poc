@@ -37,17 +37,17 @@ public class RemoteWebComponentEntryCacheModel
 	implements CacheModel<RemoteWebComponentEntry>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
 
-		if (!(object instanceof RemoteWebComponentEntryCacheModel)) {
+		if (!(obj instanceof RemoteWebComponentEntryCacheModel)) {
 			return false;
 		}
 
 		RemoteWebComponentEntryCacheModel remoteWebComponentEntryCacheModel =
-			(RemoteWebComponentEntryCacheModel)object;
+			(RemoteWebComponentEntryCacheModel)obj;
 
 		if ((remoteWebComponentEntryId ==
 				remoteWebComponentEntryCacheModel.remoteWebComponentEntryId) &&
