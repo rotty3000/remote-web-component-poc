@@ -5,5 +5,7 @@ dependencies {
 	compileOnly group: "org.osgi", name: "org.osgi.annotation.versioning"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations"
 	compileOnly group: "org.osgi", name: "org.osgi.core"
-	compileOnly project(":modules:remote-web-component:remote-web-component-api")
+
+	compile project(":modules:remote-web-component:remote-web-component-api")
+	runtimeOnly project(":modules:remote-web-component:remote-web-component-service")
 }

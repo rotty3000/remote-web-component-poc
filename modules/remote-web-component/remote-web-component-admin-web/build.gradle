@@ -7,14 +7,16 @@ dependencies {
 	compileOnly group: "com.liferay", name: "com.liferay.petra.function"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.lang"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.string"
-	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
-	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
-	compileOnly group: "com.liferay.portal", name: "com.liferay.util.java", version: "default"
-	compileOnly group: "com.liferay.portal", name: "com.liferay.util.taglib", version: "default"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.util.java"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.util.taglib"
 	compileOnly group: "javax.portlet", name: "portlet-api"
 	compileOnly group: "javax.servlet.jsp", name: "jsp-api"
 	compileOnly group: "org.apache.felix", name: "org.apache.felix.http.servlet-api", version: "1.1.2"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations"
 	compileOnly group: "org.osgi", name: "org.osgi.core"
-	compileOnly project(":modules:remote-web-component:remote-web-component-api")
+
+	compile project(":modules:remote-web-component:remote-web-component-api")
+	runtimeOnly project(":modules:remote-web-component:remote-web-component-service")
 }
