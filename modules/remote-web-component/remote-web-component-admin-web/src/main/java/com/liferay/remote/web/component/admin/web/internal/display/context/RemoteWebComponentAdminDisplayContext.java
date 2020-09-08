@@ -15,7 +15,7 @@
 package com.liferay.remote.web.component.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+//import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -42,21 +42,23 @@ public class RemoteWebComponentAdminDisplayContext {
 	}
 
 	public CreationMenu getCreationMenu() {
-		return CreationMenuBuilder.addDropdownItem(
-			dropdownItem -> {
-				PortletURL addRemoteWebComponentEntryURL =
-					_renderResponse.createRenderURL();
-
-				addRemoteWebComponentEntryURL.setParameter(
-					"mvcRenderCommandName", "/edit_remote_web_component_entry");
-				addRemoteWebComponentEntryURL.setParameter(
-					"redirect", _getRedirect());
-
-				dropdownItem.setHref(addRemoteWebComponentEntryURL);
-
-				dropdownItem.setLabel(_getLabel("add-remote-web-component"));
-			}
-		).build();
+		// TODO
+//		return CreationMenuBuilder.addDropdownItem(
+//			dropdownItem -> {
+//				PortletURL addRemoteWebComponentEntryURL =
+//					_renderResponse.createRenderURL();
+//
+//				addRemoteWebComponentEntryURL.setParameter(
+//					"mvcRenderCommandName", "/edit_remote_web_component_entry");
+//				addRemoteWebComponentEntryURL.setParameter(
+//					"redirect", _getRedirect());
+//
+//				dropdownItem.setHref(addRemoteWebComponentEntryURL);
+//
+//				dropdownItem.setLabel(_getLabel("add-remote-web-component"));
+//			}
+//		).build();
+		return null;
 	}
 
 	public PortletURL getCurrentPortletURL() {

@@ -14,12 +14,12 @@
 
 package com.liferay.remote.web.component.admin.web.internal.frontend.taglib.clay.data.set.view.table;
 
-import com.liferay.frontend.taglib.clay.data.set.ClayDataSetDisplayView;
-import com.liferay.frontend.taglib.clay.data.set.view.table.BaseTableClayDataSetDisplayView;
-import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchema;
-import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilder;
-import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilderFactory;
-import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaField;
+//import com.liferay.frontend.taglib.clay.data.set.ClayDataSetDisplayView;
+//import com.liferay.frontend.taglib.clay.data.set.view.table.BaseTableClayDataSetDisplayView;
+//import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchema;
+//import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilder;
+//import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilderFactory;
+//import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaField;
 import com.liferay.remote.web.component.admin.web.internal.constants.RemoteWebComponentAdminConstants;
 
 import org.osgi.service.component.annotations.Component;
@@ -30,45 +30,46 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = "clay.data.set.display.name=" + RemoteWebComponentAdminConstants.REMOTE_WEB_COMPONENT_ENTRY_DATA_SET_DISPLAY,
-	service = ClayDataSetDisplayView.class
+	property = "clay.data.set.display.name=" + RemoteWebComponentAdminConstants.REMOTE_WEB_COMPONENT_ENTRY_DATA_SET_DISPLAY
+	//, service = ClayDataSetDisplayView.class
 )
 public class RemoteWebComponentEntryTableClayDataSetDisplayView
-	extends BaseTableClayDataSetDisplayView {
+	//extends BaseTableClayDataSetDisplayView
+	{
 
-	@Override
-	public ClayTableSchema getClayTableSchema() {
-		ClayTableSchemaBuilder clayTableSchemaBuilder =
-			_clayTableSchemaBuilderFactory.create();
-
-		_addClayTableSchemaField(
-			clayTableSchemaBuilder, "name", "name", "actionLink");
-		_addClayTableSchemaField(clayTableSchemaBuilder, "url", "url");
-
-		return clayTableSchemaBuilder.build();
-	}
-
-	private void _addClayTableSchemaField(
-		ClayTableSchemaBuilder clayTableSchemaBuilder, String fieldName,
-		String label) {
-
-		_addClayTableSchemaField(
-			clayTableSchemaBuilder, fieldName, label, null);
-	}
-
-	private void _addClayTableSchemaField(
-		ClayTableSchemaBuilder clayTableSchemaBuilder, String fieldName,
-		String label, String contentRenderer) {
-
-		ClayTableSchemaField clayTableSchemaField =
-			clayTableSchemaBuilder.addClayTableSchemaField(fieldName, label);
-
-		if (contentRenderer != null) {
-			clayTableSchemaField.setContentRenderer(contentRenderer);
-		}
-	}
-
-	@Reference
-	private ClayTableSchemaBuilderFactory _clayTableSchemaBuilderFactory;
+//	@Override
+//	public ClayTableSchema getClayTableSchema() {
+//		ClayTableSchemaBuilder clayTableSchemaBuilder =
+//			_clayTableSchemaBuilderFactory.create();
+//
+//		_addClayTableSchemaField(
+//			clayTableSchemaBuilder, "name", "name", "actionLink");
+//		_addClayTableSchemaField(clayTableSchemaBuilder, "url", "url");
+//
+//		return clayTableSchemaBuilder.build();
+//	}
+//
+//	private void _addClayTableSchemaField(
+//		ClayTableSchemaBuilder clayTableSchemaBuilder, String fieldName,
+//		String label) {
+//
+//		_addClayTableSchemaField(
+//			clayTableSchemaBuilder, fieldName, label, null);
+//	}
+//
+//	private void _addClayTableSchemaField(
+//		ClayTableSchemaBuilder clayTableSchemaBuilder, String fieldName,
+//		String label, String contentRenderer) {
+//
+//		ClayTableSchemaField clayTableSchemaField =
+//			clayTableSchemaBuilder.addClayTableSchemaField(fieldName, label);
+//
+//		if (contentRenderer != null) {
+//			clayTableSchemaField.setContentRenderer(contentRenderer);
+//		}
+//	}
+//
+//	@Reference
+//	private ClayTableSchemaBuilderFactory _clayTableSchemaBuilderFactory;
 
 }

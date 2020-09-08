@@ -14,9 +14,9 @@
 
 package com.liferay.remote.web.component.admin.web.internal.frontend.taglib.clay.data.set;
 
-import com.liferay.frontend.taglib.clay.data.set.ClayDataSetActionProvider;
+//import com.liferay.frontend.taglib.clay.data.set.ClayDataSetActionProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+//import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
@@ -46,30 +46,31 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = "clay.data.provider.key=" + RemoteWebComponentAdminConstants.REMOTE_WEB_COMPONENT_ENTRY_DATA_SET_DISPLAY,
-	service = ClayDataSetActionProvider.class
+	property = "clay.data.provider.key=" + RemoteWebComponentAdminConstants.REMOTE_WEB_COMPONENT_ENTRY_DATA_SET_DISPLAY
+	//, service = ClayDataSetActionProvider.class
 )
 public class RemoteWebComponentEntryClayDataSetActionProvider
-	implements ClayDataSetActionProvider {
+	//implements ClayDataSetActionProvider
+	{
 
-	@Override
-	public List<DropdownItem> getDropdownItems(
-			HttpServletRequest httpServletRequest, long groupId, Object model)
-		throws PortalException {
-
-		RemoteWebComponentClayDataSetEntry remoteWebComponentClayDataSetEntry =
-			(RemoteWebComponentClayDataSetEntry)model;
-
-		return DropdownItemListBuilder.add(
-			dropdownItem -> _buildEditRemoteWebComponentEntryAction(
-				dropdownItem, httpServletRequest,
-				remoteWebComponentClayDataSetEntry)
-		).add(
-			dropdownItem -> _buildDeleteWebComponentAppEntryAction(
-				dropdownItem, httpServletRequest,
-				remoteWebComponentClayDataSetEntry)
-		).build();
-	}
+//	@Override
+//	public List<DropdownItem> getDropdownItems(
+//			HttpServletRequest httpServletRequest, long groupId, Object model)
+//		throws PortalException {
+//
+//		RemoteWebComponentClayDataSetEntry remoteWebComponentClayDataSetEntry =
+//			(RemoteWebComponentClayDataSetEntry)model;
+//
+//		return DropdownItemListBuilder.add(
+//			dropdownItem -> _buildEditRemoteWebComponentEntryAction(
+//				dropdownItem, httpServletRequest,
+//				remoteWebComponentClayDataSetEntry)
+//		).add(
+//			dropdownItem -> _buildDeleteWebComponentAppEntryAction(
+//				dropdownItem, httpServletRequest,
+//				remoteWebComponentClayDataSetEntry)
+//		).build();
+//	}
 
 	private void _buildDeleteWebComponentAppEntryAction(
 		DropdownItem dropdownItem, HttpServletRequest httpServletRequest,
