@@ -1,0 +1,8 @@
+Bundle-Name: Liferay Remote Web Component API
+Bundle-SymbolicName: com.liferay.remote.web.component.api
+Bundle-Version: 1.1.0
+Export-Package:\
+	com.liferay.remote.web.component.exception,\
+	com.liferay.remote.web.component.model,\
+	com.liferay.remote.web.component.service,\
+	com.liferay.remote.web.component.service.persistence
