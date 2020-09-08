@@ -11,7 +11,6 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-
 package com.liferay.remote.web.component.exception;
 
 import com.liferay.portal.kernel.exception.NoSuchModelException;
@@ -28,12 +27,12 @@ public class NoSuchEntryException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchEntryException(String msg, Throwable throwable) {
-		super(msg, throwable);
+	public NoSuchEntryException(String msg, Throwable cause) {
+		super(msg, cause);
 	}
 
-	public NoSuchEntryException(Throwable throwable) {
-		super(throwable);
+	public NoSuchEntryException(Throwable cause) {
+		super(cause);
 	}
 
 }
