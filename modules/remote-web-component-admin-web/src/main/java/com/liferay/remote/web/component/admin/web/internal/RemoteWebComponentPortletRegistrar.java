@@ -32,6 +32,7 @@ import org.osgi.service.component.annotations.Deactivate;
  * @author Iván Zaera Avellón
  */
 @Component(
+	immediate = true,
 	configurationPid = "com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration",
 	configurationPolicy = ConfigurationPolicy.REQUIRE,
 	service = RemoteWebComponentPortletRegistrar.class
@@ -39,15 +40,17 @@ import org.osgi.service.component.annotations.Deactivate;
 public class RemoteWebComponentPortletRegistrar {
 
 	@Activate
-	protected void activate(BundleContext bundleContext, Map<String, Object> properties) {
-		RemoteWebComponentConfiguration remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
+		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
 			RemoteWebComponentConfiguration.class, properties);
 
 		final RemoteWebComponentPortlet remoteWebComponentPortlet =
-			new RemoteWebComponentPortlet(remoteWebComponentConfiguration);
+			new RemoteWebComponentPortlet(_remoteWebComponentConfiguration);
 
 		if (_log.isInfoEnabled()) {
-			_log.info("Starting remote web component " + remoteWebComponentPortlet.getName());
+			_log.info("Starting remote web component " + _remoteWebComponentConfiguration.name());
 		}
 
 		remoteWebComponentPortlet.register(bundleContext);
@@ -57,22 +60,25 @@ public class RemoteWebComponentPortletRegistrar {
 		if (_log.isInfoEnabled()) {
 			_log.info(
 				"Started remote app entry " +
-					_remoteWebComponentPortlet.getName());
+					_remoteWebComponentConfiguration.name());
 		}
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		if (_log.isInfoEnabled()) {
-			_log.info("Stopping remote web component " + _remoteWebComponentPortlet.getName());
+			_log.info("Stopping remote web component " + _remoteWebComponentConfiguration.name());
 		}
 
 		_remoteWebComponentPortlet.unregister();
+
+		_remoteWebComponentPortlet = null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RemoteWebComponentPortletRegistrar.class);
 
+	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
 	private RemoteWebComponentPortlet _remoteWebComponentPortlet;
 
 }

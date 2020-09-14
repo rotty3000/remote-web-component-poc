@@ -19,7 +19,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 import aQute.bnd.annotation.metatype.Meta;
 
 @ExtendedObjectClassDefinition(
-	category = "web-api",
+	category = "remote-web-components",
 	factoryInstanceLabelAttribute = "elementName"
 )
 @Meta.OCD(

@@ -4,16 +4,19 @@
 **/.project
 **/.sass-cache
 **/.settings
+**/*.sublime-*
 **/bin
 **/build
 **/build_gradle
 **/node_modules
 **/test-coverage
+**/test-results
 **/tmp
 **/.web_bundle_build
 .gradle
 .idea
 /bundles
+/configs/local/*
 /gradle-*.properties
 /plugins-sdk/**/classes
 /plugins-sdk/**/ivy.xml.MD5
@@ -22,4 +25,3 @@
 /plugins-sdk/dependencies/**/*.jar
 /plugins-sdk/dist
 /plugins-sdk/lib
-test-results

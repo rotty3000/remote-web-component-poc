@@ -1,0 +1,14 @@
+{
+	"name": "remote-web-component-admin-web",
+	"private": true,
+	"scripts": {
+		"build": "liferay-npm-bundler"
+	},
+	"dependencies": {
+		"liferay-module-config-generator": "^1.3.3"
+	},
+	"devDependencies": {
+		"liferay-npm-bundler": "2.18.2"
+	},
+	"version": "1.0.4"
+}

@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
 
@@ -109,6 +110,7 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 
 			printWriter.append(StringPool.LESS_THAN);
 			printWriter.append(elementName);
+			printWriter.append(" store-descriptor=\"Liferay.State\"");
 			printWriter.append(StringPool.GREATER_THAN);
 			printWriter.append("</");
 			printWriter.append(elementName);
@@ -134,8 +136,9 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 	}
 
 	private String _getPortletName() {
-		return "remote_web_component_" +
-			_remoteWebComponentConfiguration.elementName();
+		return PortalUtil.getJsSafePortletId(
+			"remote_web_component_" +
+				_remoteWebComponentConfiguration.elementName());
 	}
 
 	private ResourceBundle _getResourceBundle(Locale locale) {
