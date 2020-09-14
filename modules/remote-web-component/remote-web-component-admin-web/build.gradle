@@ -16,7 +16,4 @@ dependencies {
 	compileOnly group: "org.apache.felix", name: "org.apache.felix.http.servlet-api", version: "1.1.2"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations"
 	compileOnly group: "org.osgi", name: "org.osgi.core"
-
-	compile project(":modules:remote-web-component:remote-web-component-api")
-	runtimeOnly project(":modules:remote-web-component:remote-web-component-service")
 }

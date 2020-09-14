@@ -1,4 +1,0 @@
-Bundle-Name: Liferay Remote Web Component UAD
-Bundle-SymbolicName: com.liferay.remote.web.component.uad
-Bundle-Version: 1.0.3
--dsannotations-options: inherit
