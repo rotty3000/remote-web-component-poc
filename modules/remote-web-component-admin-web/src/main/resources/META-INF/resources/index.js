@@ -31,6 +31,8 @@
  *      createStore(reducer, enhancer)
  *      createStore(reducer, preloadedState, enhancer)
  */
+(function() {
+
 function createStore(reducer, preloadedState, enhancer) {
 	if (typeof reducer !== 'function') {
 		throw new TypeError('`reducer` must be a function');
@@ -276,3 +278,5 @@ Liferay.State = {
 // that clients don't have to worry about possible `undefined` state).
 
 Liferay.State.register('default', defaultReducer, {});
+
+})();
