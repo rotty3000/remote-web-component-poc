@@ -16,3 +16,9 @@ To build all the project modules do:
 ./gradlew deploy
 ```
 
+To run Liferay do:
+
+```
+bundles/tomcat-9.0.33/bin/catalina.sh [jpda] run
+```
+*** add `jpda` if you want to enable java debugging on standard port (8000)

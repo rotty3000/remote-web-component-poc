@@ -79,6 +79,9 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 		properties.put("javax.portlet.security-role-ref", "power-user,user");
 		properties.put(
 			"javax.portlet.resource-bundle", _getResourceBundleName());
+		properties.put(
+			"com.liferay.portlet.header-portal-javascript",
+			_remoteWebComponentConfiguration.webComponentUrl());
 
 		_serviceRegistration = bundleContext.registerService(
 			Portlet.class, this, properties);
@@ -101,10 +104,6 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 
 		try {
 			PrintWriter printWriter = renderResponse.getWriter();
-
-			printWriter.append("<script src=\"");
-			printWriter.append(_remoteWebComponentConfiguration.webComponentUrl());
-			printWriter.append("\"></script>");
 
 			String elementName = _remoteWebComponentConfiguration.elementName();
 
