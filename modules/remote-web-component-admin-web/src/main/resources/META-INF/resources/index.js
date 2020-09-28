@@ -198,19 +198,7 @@
 
 	const STORES = {};
 
-	if (!('Liferay' in window)) {
-		console.warn('`Liferay` global not found');
-
-		window.Liferay = {};
-	}
-
-	const Liferay = window.Liferay;
-
-	if ('State' in Liferay) {
-		console.warn('`Liferay.State` already exists (overwriting)');
-	}
-
-	Liferay.State = {
+	var State = {
 		Util: {
 			combineReducers,
 			reduceReducers,
@@ -276,5 +264,15 @@
 	// Create default store with an initial object value for convenience (ie. so
 	// that clients don't have to worry about possible `undefined` state).
 
-	Liferay.State.register('default', defaultReducer, {});
+	State.register('default', defaultReducer, {});
+	
+	window.lookupStore = function(storeName) {
+		var store = State.get(storeName);
+		
+		if(!store) {
+			store = State.register(storeName, defaultReducer, {});
+		}
+		
+		return store;
+	}
 })();
