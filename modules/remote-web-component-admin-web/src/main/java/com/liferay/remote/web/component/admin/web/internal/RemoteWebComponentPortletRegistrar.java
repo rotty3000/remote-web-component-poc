@@ -15,21 +15,31 @@
 package com.liferay.remote.web.component.admin.web.internal;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
-import com.liferay.remote.web.component.admin.web.internal.portlet.RemoteWebComponentPortlet;
 
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.ComponentFactory;
+import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Iván Zaera Avellón
+ * @author Raymond Auge
  */
 @Component(
 	immediate = true,
@@ -46,39 +56,148 @@ public class RemoteWebComponentPortletRegistrar {
 		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
 			RemoteWebComponentConfiguration.class, properties);
 
-		final RemoteWebComponentPortlet remoteWebComponentPortlet =
-			new RemoteWebComponentPortlet(_remoteWebComponentConfiguration);
-
 		if (_log.isInfoEnabled()) {
-			_log.info("Starting remote web component " + _remoteWebComponentConfiguration.name());
+			_log.info(
+				"Starting remote web component {}",
+				_remoteWebComponentConfiguration.name());
 		}
 
-		remoteWebComponentPortlet.register(bundleContext);
+		Dictionary<String, Object> componentProperties = new Hashtable<>(properties);
 
-		_remoteWebComponentPortlet = remoteWebComponentPortlet;
+		componentProperties.remove(Constants.SERVICE_PID);
+
+		componentProperties.put(
+			"com.liferay.portlet.css-class-wrapper",
+			"portlet-remote-web-component");
+		componentProperties.put(
+			"com.liferay.portlet.requires-namespaced-parameters", "false");
+		componentProperties.put("javax.portlet.name", _getPortletName());
+		componentProperties.put(
+			"javax.portlet.preferences",
+			"classpath:/META-INF/portlet-preferences/default-preferences.xml");
+		componentProperties.put("javax.portlet.security-role-ref", "power-user,user");
+
+		UnicodeProperties customProperties = new UnicodeProperties();
+
+		try {
+			customProperties.load(_remoteWebComponentConfiguration.portletServiceProperties());
+			customProperties.forEach(componentProperties::put);
+		}
+		catch (IOException ioe) {
+			if (_log.isErrorEnabled()) {
+				_log.error(
+					"Could not parse portlet service properties for {}",
+					_getPortletName(), ioe);
+			}
+		}
+
+		componentProperties.put(
+			"com.liferay.portlet.header-portal-javascript",
+			_remoteWebComponentConfiguration.webComponentUrl());
+
+		String webComponentCSSUrl = _remoteWebComponentConfiguration.webComponentCssUrl();
+
+		if (Validator.isNotNull(webComponentCSSUrl)) {
+			componentProperties.put(
+				"com.liferay.portlet.header-portlet-css",
+				webComponentCSSUrl);
+		}
+
+		String displayCategory = Validator.isNotNull(
+			_remoteWebComponentConfiguration.portletDisplayCategory()) ?
+				_remoteWebComponentConfiguration.portletDisplayCategory() : "sample";
+
+		componentProperties.put(
+			"com.liferay.portlet.display-category", "category." + displayCategory);
+		componentProperties.put(
+			"com.liferay.portlet.instanceable",
+			String.valueOf(_remoteWebComponentConfiguration.instanceable()));
+		componentProperties.put(
+			"javax.portlet.resource-bundle", _getResourceBundleName());
+
+		_portletInstance = _remoteWebComponentPortletFactory.newInstance(
+			componentProperties);
+
+		componentProperties = new Hashtable<>(properties);
+
+		componentProperties.remove(Constants.SERVICE_PID);
+		componentProperties.put(
+			"resource.bundle.base.name", _getResourceBundleName());
+		componentProperties.put(
+			"servlet.context.name", "remote-web-component-admin-web");
+		componentProperties.put(
+			"javax.portlet.title." + _getPortletName(),
+			_remoteWebComponentConfiguration.name());
+		componentProperties.put(
+			"category." + displayCategory, displayCategory);
+
+		_bundleResourceLoaderInstance =
+			_remoteWebComponentResourceBundleLoaderFactory.newInstance(
+				componentProperties);
+
+		componentProperties = new Hashtable<>(properties);
+
+		componentProperties.remove(Constants.SERVICE_PID);
+		componentProperties.put("javax.portlet.name", _getPortletName());
+
+		_friendlyURLMapperInstance =
+			_remoteWebComponentFriendlyURLMapperFactory.newInstance(
+				componentProperties);
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
-				"Started remote app entry " +
-					_remoteWebComponentConfiguration.name());
+				"Started remote app entry {}",
+				_remoteWebComponentConfiguration.name());
 		}
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		if (_log.isInfoEnabled()) {
-			_log.info("Stopping remote web component " + _remoteWebComponentConfiguration.name());
+			_log.info(
+				"Stopping remote web component {}",
+				_remoteWebComponentConfiguration.name());
 		}
 
-		_remoteWebComponentPortlet.unregister();
+		_portletInstance.dispose();
+		_bundleResourceLoaderInstance.dispose();
+		_friendlyURLMapperInstance.dispose();
 
-		_remoteWebComponentPortlet = null;
+		_portletInstance = null;
+		_bundleResourceLoaderInstance = null;
+		_friendlyURLMapperInstance = null;
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				"Stoped remote web component {}",
+				_remoteWebComponentConfiguration.name());
+		}
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
+	private String _getPortletName() {
+		return PortalUtil.getJsSafePortletId(
+			"rwc_" + _remoteWebComponentConfiguration.elementName());
+	}
+
+	private String _getResourceBundleName() {
+		return _getPortletName() + ".Language";
+	}
+
+	@Reference(target = "(component.factory=remote.web.component.friendly.url.mapper)")
+	private ComponentFactory _remoteWebComponentFriendlyURLMapperFactory;
+
+	@Reference(target = "(component.factory=remote.web.component.portlet)")
+	private ComponentFactory _remoteWebComponentPortletFactory;
+
+	@Reference(target = "(component.factory=remote.web.component.resource.bundle.loader)")
+	private ComponentFactory _remoteWebComponentResourceBundleLoaderFactory;
+
+	private static final Logger _log = LoggerFactory.getLogger(
 		RemoteWebComponentPortletRegistrar.class);
 
+	private volatile ComponentInstance _bundleResourceLoaderInstance;
+	private volatile ComponentInstance _friendlyURLMapperInstance;
+	private volatile ComponentInstance _portletInstance;
 	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
-	private RemoteWebComponentPortlet _remoteWebComponentPortlet;
 
 }

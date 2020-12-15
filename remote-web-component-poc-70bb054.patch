@@ -1,0 +1,1704 @@
+diff --git a/modules/remote-web-component-admin-web/bnd.bnd b/modules/remote-web-component-admin-web/bnd.bnd
+index 9d5afd2..4eba0b5 100644
+--- a/modules/remote-web-component-admin-web/bnd.bnd
++++ b/modules/remote-web-component-admin-web/bnd.bnd
+@@ -1,5 +1,6 @@
+ Bundle-Name: Liferay Remote Web Component Admin Web
+ Bundle-SymbolicName: com.liferay.remote.web.component.admin.web
+ Bundle-Version: 1.0.4
++Export-Package: com.liferay.remote.web.component.admin.web.configuration
+ Liferay-JS-Resources-Top-Head: /index.js
+ Web-ContextPath: /remote-web-component-admin-web
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/build.gradle b/modules/remote-web-component-admin-web/build.gradle
+index dee6b67..d5f9661 100644
+--- a/modules/remote-web-component-admin-web/build.gradle
++++ b/modules/remote-web-component-admin-web/build.gradle
+@@ -1,10 +1,18 @@
++ext {
++    configjacoco= []
++    configsonar= []
++}
++
+ dependencies {
+ 	compileOnly group: "com.liferay", name: "biz.aQute.bnd.annotation", version: "4.2.0.LIFERAY-PATCHED-1"
+ 	compileOnly group: "com.liferay", name: "com.liferay.application.list.api"
++	compileOnly group: "com.liferay", name: "com.liferay.configuration.admin.api"
++	compileOnly group: "com.liferay", name: "com.liferay.dynamic.data.mapping.api"
+ 	compileOnly group: "com.liferay", name: "com.liferay.frontend.taglib"
+ 	compileOnly group: "com.liferay", name: "com.liferay.frontend.taglib.clay"
+ 	compileOnly group: "com.liferay", name: "com.liferay.portal.configuration.metatype.api"
+ 	compileOnly group: "com.liferay", name: "com.liferay.petra.function"
++	compileOnly group: "com.liferay", name: "com.liferay.petra.io"
+ 	compileOnly group: "com.liferay", name: "com.liferay.petra.lang"
+ 	compileOnly group: "com.liferay", name: "com.liferay.petra.string"
+ 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl"
+@@ -14,6 +22,8 @@ dependencies {
+ 	compileOnly group: "javax.portlet", name: "portlet-api"
+ 	compileOnly group: "javax.servlet.jsp", name: "jsp-api"
+ 	compileOnly group: "org.apache.felix", name: "org.apache.felix.http.servlet-api", version: "1.1.2"
++	compileOnly group: "org.osgi", name: "org.osgi.service.component", version: "1.3.0"
+ 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations"
+ 	compileOnly group: "org.osgi", name: "org.osgi.core"
++	compileOnly group: "org.slf4j", name: "slf4j-api"
+ }
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/configuration/RemoteWebComponentConfiguration.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/configuration/RemoteWebComponentConfiguration.java
+index c31e8fe..f510550 100644
+--- a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/configuration/RemoteWebComponentConfiguration.java
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/configuration/RemoteWebComponentConfiguration.java
+@@ -14,12 +14,68 @@
+ 
+ package com.liferay.remote.web.component.admin.web.configuration;
+ 
++import com.liferay.dynamic.data.mapping.annotations.DDMForm;
++import com.liferay.dynamic.data.mapping.annotations.DDMFormField;
++import com.liferay.dynamic.data.mapping.annotations.DDMFormLayout;
++import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutColumn;
++import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutPage;
++import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutRow;
+ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+ 
+ import aQute.bnd.annotation.metatype.Meta;
+ 
++@DDMForm
++@DDMFormLayout(
++	paginationMode = com.liferay.dynamic.data.mapping.model.DDMFormLayout.SINGLE_PAGE_MODE,
++	value = {
++		@DDMFormLayoutPage(
++			{
++				@DDMFormLayoutRow(
++					{
++						@DDMFormLayoutColumn(
++							size = 12,
++							value = {
++								"name",
++								"elementName",
++								"webComponentUrl",
++								"webComponentCssUrl"
++							}
++						)
++					}
++				),
++				@DDMFormLayoutRow(
++					{
++						@DDMFormLayoutColumn(
++							size = 6,
++							value = {
++								"instanceable"
++							}
++						),
++						@DDMFormLayoutColumn(
++							size = 6,
++							value = {
++								"portletDisplayCategory"
++							}
++						)
++					}
++				),
++				@DDMFormLayoutRow(
++					{
++						@DDMFormLayoutColumn(
++							size = 12,
++							value = {
++								"routes",
++								"portletServiceProperties"
++							}
++						)
++					}
++				)
++			}
++		)
++	}
++)
+ @ExtendedObjectClassDefinition(
+-	category = "remote-web-components",
++	category = "widget-tools",
+ 	factoryInstanceLabelAttribute = "elementName"
+ )
+ @Meta.OCD(
+@@ -29,13 +85,91 @@ import aQute.bnd.annotation.metatype.Meta;
+ )
+ public interface RemoteWebComponentConfiguration {
+ 
+-	@Meta.AD
++	@Meta.AD(
++		name = "name",
++		description = "name-description"
++	)
++	@DDMFormField(
++		name = "%name",
++		tip = "%name-description",
++		type = "text",
++		required = true
++	)
+ 	public String name();
+ 
+-	@Meta.AD(name = "web-component-url")
++	@Meta.AD(
++		name = "element-name",
++		description = "element-name-description"
++	)
++	@DDMFormField(
++		label = "%element-name",
++		tip = "%element-name-description",
++		required = true
++	)
++	public String elementName();
++
++	@Meta.AD(
++		name = "web-component-url",
++		description = "web-component-url-description"
++	)
++	@DDMFormField(
++		label = "%web-component-url",
++		tip = "%web-component-url-description",
++		required = true
++	)
+ 	public String webComponentUrl();
+ 
+-	@Meta.AD(name = "element-name")
+-	public String elementName();
++	@Meta.AD(
++		name = "web-component-css-url",
++		description = "web-component-css-url-description",
++		required = false
++	)
++	@DDMFormField(
++		label = "%web-component-css-url",
++		tip = "%web-component-css-url-description"
++	)
++	public String webComponentCssUrl();
++
++	@Meta.AD(
++		name = "instanceable",
++		description = "instanceable-desciption",
++		deflt = "false",
++		required = false
++	)
++	public boolean instanceable();
++
++	@Meta.AD(
++		name = "portlet-display-category",
++		description = "portlet-display-category-desciption",
++		deflt = "sample",
++		required = false
++	)
++	@DDMFormField(
++		label = "%portlet-display-category",
++		tip = "%portlet-display-category-desciption",
++		predefinedValue = "sample"
++	)
++	public String portletDisplayCategory();
++
++	@Meta.AD(
++		name = "portlet-service-properties",
++		description = "portlet-service-properties-description",
++		deflt = "",
++		required = false
++	)
++	public String portletServiceProperties();
++
++	@Meta.AD(
++		name = "routes",
++		description = "routes-description",
++		deflt = "",
++		required = false
++	)
++	@DDMFormField(
++		label = "%routes",
++		tip = "%routes-description",
++		predefinedValue = ""
++	)
++	public String[] routes();
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/RemoteWebComponentPortletRegistrar.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/RemoteWebComponentPortletRegistrar.java
+index c1fe0c1..e71af8f 100644
+--- a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/RemoteWebComponentPortletRegistrar.java
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/RemoteWebComponentPortletRegistrar.java
+@@ -15,21 +15,31 @@
+ package com.liferay.remote.web.component.admin.web.internal;
+ 
+ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+-import com.liferay.portal.kernel.log.Log;
+-import com.liferay.portal.kernel.log.LogFactoryUtil;
++import com.liferay.portal.kernel.util.PortalUtil;
++import com.liferay.portal.kernel.util.UnicodeProperties;
++import com.liferay.portal.kernel.util.Validator;
+ import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
+-import com.liferay.remote.web.component.admin.web.internal.portlet.RemoteWebComponentPortlet;
+ 
++import java.io.IOException;
++import java.util.Dictionary;
++import java.util.Hashtable;
+ import java.util.Map;
+ 
+ import org.osgi.framework.BundleContext;
++import org.osgi.framework.Constants;
++import org.osgi.service.component.ComponentFactory;
++import org.osgi.service.component.ComponentInstance;
+ import org.osgi.service.component.annotations.Activate;
+ import org.osgi.service.component.annotations.Component;
+ import org.osgi.service.component.annotations.ConfigurationPolicy;
+ import org.osgi.service.component.annotations.Deactivate;
++import org.osgi.service.component.annotations.Reference;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
+ 
+ /**
+  * @author Iván Zaera Avellón
++ * @author Raymond Auge
+  */
+ @Component(
+ 	immediate = true,
+@@ -46,39 +56,148 @@ public class RemoteWebComponentPortletRegistrar {
+ 		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
+ 			RemoteWebComponentConfiguration.class, properties);
+ 
+-		final RemoteWebComponentPortlet remoteWebComponentPortlet =
+-			new RemoteWebComponentPortlet(_remoteWebComponentConfiguration);
+-
+ 		if (_log.isInfoEnabled()) {
+-			_log.info("Starting remote web component " + _remoteWebComponentConfiguration.name());
++			_log.info(
++				"Starting remote web component {}",
++				_remoteWebComponentConfiguration.name());
++		}
++
++		Dictionary<String, Object> componentProperties = new Hashtable<>(properties);
++
++		componentProperties.remove(Constants.SERVICE_PID);
++
++		componentProperties.put(
++			"com.liferay.portlet.css-class-wrapper",
++			"portlet-remote-web-component");
++		componentProperties.put(
++			"com.liferay.portlet.requires-namespaced-parameters", "false");
++		componentProperties.put("javax.portlet.name", _getPortletName());
++		componentProperties.put(
++			"javax.portlet.preferences",
++			"classpath:/META-INF/portlet-preferences/default-preferences.xml");
++		componentProperties.put("javax.portlet.security-role-ref", "power-user,user");
++
++		UnicodeProperties customProperties = new UnicodeProperties();
++
++		try {
++			customProperties.load(_remoteWebComponentConfiguration.portletServiceProperties());
++			customProperties.forEach(componentProperties::put);
+ 		}
++		catch (IOException ioe) {
++			if (_log.isErrorEnabled()) {
++				_log.error(
++					"Could not parse portlet service properties for {}",
++					_getPortletName(), ioe);
++			}
++		}
++
++		componentProperties.put(
++			"com.liferay.portlet.header-portal-javascript",
++			_remoteWebComponentConfiguration.webComponentUrl());
++
++		String webComponentCSSUrl = _remoteWebComponentConfiguration.webComponentCssUrl();
++
++		if (Validator.isNotNull(webComponentCSSUrl)) {
++			componentProperties.put(
++				"com.liferay.portlet.header-portlet-css",
++				webComponentCSSUrl);
++		}
++
++		String displayCategory = Validator.isNotNull(
++			_remoteWebComponentConfiguration.portletDisplayCategory()) ?
++				_remoteWebComponentConfiguration.portletDisplayCategory() : "sample";
++
++		componentProperties.put(
++			"com.liferay.portlet.display-category", "category." + displayCategory);
++		componentProperties.put(
++			"com.liferay.portlet.instanceable",
++			String.valueOf(_remoteWebComponentConfiguration.instanceable()));
++		componentProperties.put(
++			"javax.portlet.resource-bundle", _getResourceBundleName());
++
++		_portletInstance = _remoteWebComponentPortletFactory.newInstance(
++			componentProperties);
+ 
+-		remoteWebComponentPortlet.register(bundleContext);
++		componentProperties = new Hashtable<>(properties);
+ 
+-		_remoteWebComponentPortlet = remoteWebComponentPortlet;
++		componentProperties.remove(Constants.SERVICE_PID);
++		componentProperties.put(
++			"resource.bundle.base.name", _getResourceBundleName());
++		componentProperties.put(
++			"servlet.context.name", "remote-web-component-admin-web");
++		componentProperties.put(
++			"javax.portlet.title." + _getPortletName(),
++			_remoteWebComponentConfiguration.name());
++		componentProperties.put(
++			"category." + displayCategory, displayCategory);
++
++		_bundleResourceLoaderInstance =
++			_remoteWebComponentResourceBundleLoaderFactory.newInstance(
++				componentProperties);
++
++		componentProperties = new Hashtable<>(properties);
++
++		componentProperties.remove(Constants.SERVICE_PID);
++		componentProperties.put("javax.portlet.name", _getPortletName());
++
++		_friendlyURLMapperInstance =
++			_remoteWebComponentFriendlyURLMapperFactory.newInstance(
++				componentProperties);
+ 
+ 		if (_log.isInfoEnabled()) {
+ 			_log.info(
+-				"Started remote app entry " +
+-					_remoteWebComponentConfiguration.name());
++				"Started remote app entry {}",
++				_remoteWebComponentConfiguration.name());
+ 		}
+ 	}
+ 
+ 	@Deactivate
+ 	protected void deactivate() {
+ 		if (_log.isInfoEnabled()) {
+-			_log.info("Stopping remote web component " + _remoteWebComponentConfiguration.name());
++			_log.info(
++				"Stopping remote web component {}",
++				_remoteWebComponentConfiguration.name());
++		}
++
++		_portletInstance.dispose();
++		_bundleResourceLoaderInstance.dispose();
++		_friendlyURLMapperInstance.dispose();
++
++		_portletInstance = null;
++		_bundleResourceLoaderInstance = null;
++		_friendlyURLMapperInstance = null;
++
++		if (_log.isInfoEnabled()) {
++			_log.info(
++				"Stoped remote web component {}",
++				_remoteWebComponentConfiguration.name());
+ 		}
++	}
+ 
+-		_remoteWebComponentPortlet.unregister();
++	private String _getPortletName() {
++		return PortalUtil.getJsSafePortletId(
++			"rwc_" + _remoteWebComponentConfiguration.elementName());
++	}
+ 
+-		_remoteWebComponentPortlet = null;
++	private String _getResourceBundleName() {
++		return _getPortletName() + ".Language";
+ 	}
+ 
+-	private static final Log _log = LogFactoryUtil.getLog(
++	@Reference(target = "(component.factory=remote.web.component.friendly.url.mapper)")
++	private ComponentFactory _remoteWebComponentFriendlyURLMapperFactory;
++
++	@Reference(target = "(component.factory=remote.web.component.portlet)")
++	private ComponentFactory _remoteWebComponentPortletFactory;
++
++	@Reference(target = "(component.factory=remote.web.component.resource.bundle.loader)")
++	private ComponentFactory _remoteWebComponentResourceBundleLoaderFactory;
++
++	private static final Logger _log = LoggerFactory.getLogger(
+ 		RemoteWebComponentPortletRegistrar.class);
+ 
++	private volatile ComponentInstance _bundleResourceLoaderInstance;
++	private volatile ComponentInstance _friendlyURLMapperInstance;
++	private volatile ComponentInstance _portletInstance;
+ 	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
+-	private RemoteWebComponentPortlet _remoteWebComponentPortlet;
+ 
+ }
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/form/RemoteWebComponentConfigurationForm.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/form/RemoteWebComponentConfigurationForm.java
+new file mode 100644
+index 0000000..142c18c
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/form/RemoteWebComponentConfigurationForm.java
+@@ -0,0 +1,18 @@
++package com.liferay.remote.web.component.admin.web.internal.form;
++
++import org.osgi.service.component.annotations.Component;
++
++import com.liferay.configuration.admin.definition.ConfigurationDDMFormDeclaration;
++import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
++
++@Component(
++	property = "configurationPid=com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration"
++)
++public class RemoteWebComponentConfigurationForm implements ConfigurationDDMFormDeclaration {
++
++	@Override
++	public Class<?> getDDMFormClass() {
++		return RemoteWebComponentConfiguration.class;
++	}
++
++}
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/layouttpl/LayoutTemplateComponent.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/layouttpl/LayoutTemplateComponent.java
+new file mode 100644
+index 0000000..16f7b5a
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/layouttpl/LayoutTemplateComponent.java
+@@ -0,0 +1,128 @@
++/**
++ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
++ *
++ * This library is free software; you can redistribute it and/or modify it under
++ * the terms of the GNU Lesser General Public License as published by the Free
++ * Software Foundation; either version 2.1 of the License, or (at your option)
++ * any later version.
++ *
++ * This library is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
++ * details.
++ */
++
++package com.liferay.remote.web.component.admin.web.internal.layouttpl;
++
++import java.util.List;
++import java.util.Properties;
++
++import javax.servlet.ServletContext;
++
++import org.osgi.framework.Bundle;
++import org.osgi.framework.BundleContext;
++import org.osgi.service.component.annotations.Activate;
++import org.osgi.service.component.annotations.Component;
++import org.osgi.service.component.annotations.Deactivate;
++import org.osgi.service.component.annotations.Reference;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
++import com.liferay.petra.io.StreamUtil;
++import com.liferay.portal.kernel.model.LayoutTemplate;
++import com.liferay.portal.kernel.plugin.PluginPackage;
++import com.liferay.portal.kernel.service.LayoutTemplateLocalService;
++import com.liferay.portal.kernel.service.LayoutTemplateLocalServiceUtil;
++import com.liferay.portal.plugin.PluginPackageUtil;
++
++@Component
++public class LayoutTemplateComponent {
++
++	@Activate
++	protected void activate(BundleContext bundleContext) {
++		Bundle bundle = bundleContext.getBundle();
++
++		try {
++			String layoutTemplateXml = StreamUtil.toString(
++				bundle.getEntry("/META-INF/liferay-layout-templates.xml").openStream());
++
++			Properties props = new Properties();
++			props.put("module-group-id", "remote-web-components");
++
++			PluginPackage pluginPackage =
++				PluginPackageUtil.readPluginPackageProperties(
++					"remote-web-component-layouttpl", props);
++
++			pluginPackage.setContext(_servletContext.getServletContextName());
++
++			_layoutTemplates = _layoutTemplateLocalService.init(
++				_servletContext, new String[] {layoutTemplateXml}, pluginPackage);
++
++			if (_log.isInfoEnabled()) {
++				if (_layoutTemplates.size() == 1) {
++					_log.info(
++						"1 layout template for {} is available for use",
++						_servletContext.getServletContextName());
++				}
++				else {
++					_log.info(
++						"{} layout templates for {} are available for use",
++						_layoutTemplates.size(),
++						_servletContext.getServletContextName());
++				}
++			}
++		}
++		catch (Exception exception) {
++			_log.error(
++				"Error initializing layout templates for {}",
++				_servletContext.getServletContextName(), exception);
++		}
++	}
++
++	@Deactivate
++	protected void deactivate() {
++		if (_layoutTemplates == null) {
++			return;
++		}
++
++		for (LayoutTemplate layoutTemplate : _layoutTemplates) {
++			try {
++				LayoutTemplateLocalServiceUtil.uninstallLayoutTemplate(
++					layoutTemplate.getLayoutTemplateId(),
++					layoutTemplate.isStandard());
++			}
++			catch (Exception exception) {
++				_log.error(
++					"Could not process layoutTemplate {}", layoutTemplate, exception);
++			}
++		}
++
++		if (_log.isInfoEnabled()) {
++			if (_layoutTemplates.size() == 1) {
++				_log.info(
++					"1 layout template for {} was unregistered",
++					_servletContext.getServletContextName());
++			}
++			else {
++				_log.info(
++					"{} layout templates for {} were unregistered",
++					_layoutTemplates.size(),
++					_servletContext.getServletContextName());
++			}
++		}
++	}
++
++	@Reference
++	private LayoutTemplateLocalService _layoutTemplateLocalService;
++
++	@Reference(
++		target = "(osgi.web.symbolicname=com.liferay.remote.web.component.admin.web)"
++	)
++	private ServletContext _servletContext;
++
++	private static final Logger _log = LoggerFactory.getLogger(
++		LayoutTemplateComponent.class);
++
++	private volatile List<LayoutTemplate> _layoutTemplates;
++
++}
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/portlet/RemoteWebComponentPortlet.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/portlet/RemoteWebComponentPortlet.java
+index 3370d9f..c771a8a 100644
+--- a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/portlet/RemoteWebComponentPortlet.java
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/portlet/RemoteWebComponentPortlet.java
+@@ -15,43 +15,50 @@
+ package com.liferay.remote.web.component.admin.web.internal.portlet;
+ 
+ import com.liferay.petra.string.StringPool;
+-import com.liferay.portal.kernel.log.Log;
+-import com.liferay.portal.kernel.log.LogFactoryUtil;
++import com.liferay.petra.string.StringUtil;
++import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
++import com.liferay.portal.kernel.json.JSONFactory;
+ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+-import com.liferay.portal.kernel.util.HashMapBuilder;
+-import com.liferay.portal.kernel.util.PortalUtil;
+-import com.liferay.portal.kernel.util.ResourceBundleLoader;
++import com.liferay.portal.kernel.theme.ThemeDisplay;
++import com.liferay.portal.kernel.util.ArrayUtil;
++import com.liferay.portal.kernel.util.Portal;
++import com.liferay.portal.kernel.util.WebKeys;
+ import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
+ 
++import static java.util.stream.Collectors.joining;
++import static java.util.stream.Collectors.toMap;
++
+ import java.io.IOException;
+ import java.io.PrintWriter;
+-
+-import java.util.Collections;
+-import java.util.Dictionary;
+-import java.util.Enumeration;
+-import java.util.Hashtable;
++import java.util.Arrays;
++import java.util.Collection;
++import java.util.List;
+ import java.util.Locale;
+ import java.util.Map;
+-import java.util.ResourceBundle;
++import java.util.Map.Entry;
++import java.util.function.Predicate;
++import java.util.stream.Collectors;
+ 
+ import javax.portlet.Portlet;
+ import javax.portlet.RenderRequest;
+ import javax.portlet.RenderResponse;
+ 
+ import org.osgi.framework.BundleContext;
+-import org.osgi.framework.ServiceRegistration;
++import org.osgi.service.component.annotations.Activate;
++import org.osgi.service.component.annotations.Component;
++import org.osgi.service.component.annotations.Reference;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
+ 
+ /**
+  * @author Iván Zaera Avellón
+  */
++@Component(
++	factory = "remote.web.component.portlet",
++	service = Portlet.class
++)
+ public class RemoteWebComponentPortlet extends MVCPortlet {
+ 
+-	public RemoteWebComponentPortlet(
+-		RemoteWebComponentConfiguration remoteWebComponentEntry) {
+-
+-		_remoteWebComponentConfiguration = remoteWebComponentEntry;
+-	}
+-
+ 	public String getName() {
+ 		return _remoteWebComponentConfiguration.name();
+ 	}
+@@ -60,44 +67,6 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
+ 		return _remoteWebComponentConfiguration.name();
+ 	}
+ 
+-	public synchronized void register(BundleContext bundleContext) {
+-		if (_serviceRegistration != null) {
+-			throw new IllegalStateException("Portlet is already registered");
+-		}
+-
+-		Dictionary<String, Object> properties = new Hashtable<>();
+-
+-		properties.put(
+-			"com.liferay.portlet.css-class-wrapper",
+-			"portlet-remote-web-component");
+-		properties.put(
+-			"com.liferay.portlet.display-category", "category.sample");
+-		properties.put(
+-			"com.liferay.portlet.header-portlet-css", "/display/css/main.css");
+-		properties.put("com.liferay.portlet.instanceable", true);
+-		properties.put("javax.portlet.name", _getPortletName());
+-		properties.put("javax.portlet.security-role-ref", "power-user,user");
+-		properties.put(
+-			"javax.portlet.resource-bundle", _getResourceBundleName());
+-		properties.put(
+-			"com.liferay.portlet.header-portal-javascript",
+-			_remoteWebComponentConfiguration.webComponentUrl());
+-
+-		_serviceRegistration = bundleContext.registerService(
+-			Portlet.class, this, properties);
+-
+-		properties = new Hashtable<>();
+-
+-		properties.put("resource.bundle.base.name", _getResourceBundleName());
+-		properties.put(
+-			"servlet.context.name", "remote-web-component-admin-web");
+-
+-		_resourceBundleLoaderServiceRegistration =
+-			bundleContext.registerService(
+-				ResourceBundleLoader.class,
+-				locale -> _getResourceBundle(locale), properties);
+-	}
+-
+ 	@Override
+ 	public void render(
+ 		RenderRequest renderRequest, RenderResponse renderResponse) {
+@@ -107,9 +76,61 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
+ 
+ 			String elementName = _remoteWebComponentConfiguration.elementName();
+ 
++			ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
++
++			String basePath = _portal.getLayoutRelativeURL(themeDisplay.getLayout(), themeDisplay);
++
+ 			printWriter.append(StringPool.LESS_THAN);
+ 			printWriter.append(elementName);
+-			printWriter.append(" store-descriptor=\"Liferay.State\"");
++			printWriter.append(" id=\"remote-web-component-");
++			printWriter.append(renderResponse.getNamespace());
++			printWriter.append("\" base-path=\"");
++			printWriter.append(basePath);
++			printWriter.append("\" namespace=\"");
++			printWriter.append(renderResponse.getNamespace());
++			printWriter.append("\" ");
++			printWriter.append(" store-descriptor=\"Liferay.State\" ");
++
++			renderRequest.getParameterMap().forEach((k, v) -> {
++				printWriter.append("data-param-");
++				printWriter.append(k);
++				printWriter.append("=\"");
++				printWriter.append(v.length > 1 ? StringUtil.merge(v, " ") : v[0]);
++				printWriter.append("\" ");
++			});
++
++			renderRequest.getPublicParameterMap().forEach((k, v) -> {
++				printWriter.append("data-param-");
++				printWriter.append(k);
++				printWriter.append("=\"");
++				printWriter.append(v.length > 1 ? StringUtil.merge(v, " ") : v[0]);
++				printWriter.append("\" ");
++			});
++
++			StringBuffer sb = new StringBuffer();
++
++			_webComponentConfigurationAttributes.forEach((k, v) -> {
++				sb.append("data-config-");
++				sb.append(k.replaceAll("\\.", "-"));
++				sb.append("=\"");
++
++				if (v.getClass().isArray()) {
++					sb.append(
++						Arrays.asList(v).stream().map(String::valueOf).collect(joining(" ")));
++				}
++				else if (v instanceof Collection) {
++					sb.append(
++						((Collection<?>)v).stream().map(String::valueOf).collect(joining(" ")));
++				}
++				else {
++					sb.append(String.valueOf(v));
++				}
++
++				sb.append("\" ");
++			});
++
++			printWriter.append(sb.toString());
++
+ 			printWriter.append(StringPool.GREATER_THAN);
+ 			printWriter.append("</");
+ 			printWriter.append(elementName);
+@@ -117,60 +138,46 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
+ 
+ 			printWriter.flush();
+ 		}
+-		catch (IOException ioException) {
+-			_log.error("Unable to render HTML output", ioException);
++		catch (Throwable throwable) {
++			_log.error(
++				"Unable to render web Component <{}>",
++				_remoteWebComponentConfiguration.elementName(),
++				throwable);
+ 		}
+ 	}
+ 
+-	public synchronized void unregister() {
+-		if (_serviceRegistration == null) {
+-			throw new IllegalStateException("Portlet is not registered");
+-		}
+-
+-		_resourceBundleLoaderServiceRegistration.unregister();
+-		_serviceRegistration.unregister();
++	@Activate
++	protected void activate(
++		BundleContext bundleContext, Map<String, Object> properties) {
+ 
+-		_resourceBundleLoaderServiceRegistration = null;
+-		_serviceRegistration = null;
+-	}
++		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
++			RemoteWebComponentConfiguration.class, properties);
+ 
+-	private String _getPortletName() {
+-		return PortalUtil.getJsSafePortletId(
+-			"remote_web_component_" +
+-				_remoteWebComponentConfiguration.elementName());
++		_webComponentConfigurationAttributes = properties.entrySet().stream().filter(
++			e -> _keyFilters.stream().noneMatch(p -> p.test(e.getKey()))
++		).collect(toMap(Entry::getKey, Entry::getValue));
+ 	}
+ 
+-	private ResourceBundle _getResourceBundle(Locale locale) {
+-		return new ResourceBundle() {
+-
+-			@Override
+-			public Enumeration<String> getKeys() {
+-				return Collections.enumeration(_labels.keySet());
+-			}
+-
+-			@Override
+-			protected Object handleGetObject(String key) {
+-				return _labels.get(key);
+-			}
+-
+-			private final Map<String, String> _labels = HashMapBuilder.put(
+-				"javax.portlet.title." + _getPortletName(),
+-				_remoteWebComponentConfiguration.name()
+-			).build();
+-
+-		};
+-	}
+-
+-	private String _getResourceBundleName() {
+-		return _getPortletName() + ".Language";
+-	}
++	@Reference
++	private Portal _portal;
+ 
+-	private static final Log _log = LogFactoryUtil.getLog(
++	private static final Logger _log = LoggerFactory.getLogger(
+ 		RemoteWebComponentPortlet.class);
+ 
+-	private final RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
+-	private ServiceRegistration<ResourceBundleLoader>
+-		_resourceBundleLoaderServiceRegistration;
+-	private ServiceRegistration<Portlet> _serviceRegistration;
++	private static final List<Predicate<String>> _keyFilters = Arrays.asList(
++		"component.id"::equals,
++		"component.name"::equals,
++		"service.pid"::equals,
++		"service.factoryPid"::equals,
++		"portletServiceProperties"::equals,
++		"routes"::equals,
++		k -> k.endsWith(".target"),
++		k -> k.startsWith("com.liferay.portlet."),
++		k -> k.startsWith("felix."),
++		k -> k.startsWith("javax.portlet.")
++	);
++
++	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
++	private volatile Map<String, Object> _webComponentConfigurationAttributes;
+ 
+ }
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/resource/RemoteWebComponentResourceBundleLoader.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/resource/RemoteWebComponentResourceBundleLoader.java
+new file mode 100644
+index 0000000..84162bb
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/resource/RemoteWebComponentResourceBundleLoader.java
+@@ -0,0 +1,55 @@
++/**
++ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
++ *
++ * This library is free software; you can redistribute it and/or modify it under
++ * the terms of the GNU Lesser General Public License as published by the Free
++ * Software Foundation; either version 2.1 of the License, or (at your option)
++ * any later version.
++ *
++ * This library is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
++ * details.
++ */
++
++package com.liferay.remote.web.component.admin.web.internal.resource;
++
++import java.util.Collections;
++import java.util.Enumeration;
++import java.util.Locale;
++import java.util.Map;
++import java.util.ResourceBundle;
++
++import org.osgi.service.component.annotations.Activate;
++import org.osgi.service.component.annotations.Component;
++
++import com.liferay.portal.kernel.util.ResourceBundleLoader;
++
++@Component(factory = "remote.web.component.resource.bundle.loader")
++public class RemoteWebComponentResourceBundleLoader implements ResourceBundleLoader {
++
++	@Override
++	public ResourceBundle loadResourceBundle(Locale locale) {
++		return new ResourceBundle() {
++
++			@Override
++			public Enumeration<String> getKeys() {
++				return Collections.enumeration(_properties.keySet());
++			}
++
++			@Override
++			protected Object handleGetObject(String key) {
++				return _properties.get(key);
++			}
++
++		};
++	}
++
++	@Activate
++	protected void activate(Map<String, Object> properties) {
++		_properties = properties;
++	}
++
++	private volatile Map<String, Object> _properties;
++
++}
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RemoteWebComponentFriendlyURLMapper.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RemoteWebComponentFriendlyURLMapper.java
+new file mode 100644
+index 0000000..9b46989
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RemoteWebComponentFriendlyURLMapper.java
+@@ -0,0 +1,132 @@
++/**
++ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
++ *
++ * This library is free software; you can redistribute it and/or modify it under
++ * the terms of the GNU Lesser General Public License as published by the Free
++ * Software Foundation; either version 2.1 of the License, or (at your option)
++ * any later version.
++ *
++ * This library is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
++ * details.
++ */
++
++package com.liferay.remote.web.component.admin.web.internal.route;
++
++import java.util.HashMap;
++import java.util.Map;
++
++import javax.portlet.PortletMode;
++import javax.portlet.WindowState;
++
++import org.osgi.service.component.annotations.Activate;
++import org.osgi.service.component.annotations.Component;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
++import com.liferay.petra.string.StringPool;
++import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
++import com.liferay.portal.kernel.portlet.DefaultFriendlyURLMapper;
++import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
++import com.liferay.portal.kernel.portlet.LiferayPortletURL;
++import com.liferay.portal.kernel.portlet.Route;
++import com.liferay.portal.kernel.portlet.Router;
++import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
++
++@Component(
++	factory = "remote.web.component.friendly.url.mapper",
++	service = FriendlyURLMapper.class
++)
++public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMapper {
++
++	@Activate
++	protected void activate(Map<String, Object> properties) {
++		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
++			RemoteWebComponentConfiguration.class, properties);
++
++		boolean instanceable = _remoteWebComponentConfiguration.instanceable();
++		Router router = new RouterImpl();
++
++		if ((_remoteWebComponentConfiguration.routes().length == 1) && _remoteWebComponentConfiguration.routes()[0].length() == 0) {
++			// skip
++		}
++		else {
++			for (String routePattern : _remoteWebComponentConfiguration.routes()) {
++				if (!validate(routePattern)) {
++					if (_log.isErrorEnabled()) {
++						_log.error(
++								"Invalid route [{}] was specified for web component <{}>",
++								routePattern, _remoteWebComponentConfiguration.elementName());
++					}
++
++					continue;
++				}
++
++				Route route = router.addRoute(instanceable ? "/{instanceId}" + routePattern : routePattern);
++
++				route.addImplicitParameter("p_p_lifecycle", "0");
++				route.addImplicitParameter("p_p_mode", PortletMode.VIEW.toString());
++				route.addImplicitParameter("p_p_state", WindowState.MAXIMIZED.toString());
++			}
++		}
++
++		String baseRoute = instanceable ? "/{instanceId}" : "";
++
++		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
++			Route route = router.addRoute(baseRoute);
++
++			route.addImplicitParameter("p_p_lifecycle", "0");
++			route.addImplicitParameter("p_p_mode", PortletMode.VIEW.toString());
++			route.addImplicitParameter("p_p_state", WindowState.MAXIMIZED.toString());
++		}
++
++		super.router = router;
++	}
++
++	@Override
++	public String buildPath(LiferayPortletURL liferayPortletURL) {
++		Map<String, String> routeParameters = new HashMap<>();
++
++		buildRouteParameters(liferayPortletURL, routeParameters);
++
++		String friendlyURLPath = router.parametersToUrl(routeParameters);
++
++		if (friendlyURLPath == null) {
++			return null;
++		}
++
++		addParametersIncludedInPath(liferayPortletURL, routeParameters);
++
++		return StringPool.SLASH.concat(
++			getMapping()
++		).concat(
++			friendlyURLPath
++		);
++	}
++
++	@Override
++	public String getMapping() {
++		return _remoteWebComponentConfiguration.elementName();
++	}
++
++	@Override
++	public boolean isCheckMappingWithPrefix() {
++		return super.isCheckMappingWithPrefix();
++	}
++
++	@Override
++	public void setRouter(Router router) {
++		// make sure we don't get reset
++	}
++
++	private boolean validate(String routePattern) {
++		return routePattern.startsWith("/") && (routePattern.length() > 1);
++	}
++
++	private static final Logger _log = LoggerFactory.getLogger(
++		RemoteWebComponentFriendlyURLMapper.class);
++
++	private RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
++
++}
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RouteImpl.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RouteImpl.java
+new file mode 100644
+index 0000000..69d4215
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RouteImpl.java
+@@ -0,0 +1,209 @@
++package com.liferay.remote.web.component.admin.web.internal.route;
++
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.Map;
++import java.util.Set;
++
++import com.liferay.portal.kernel.portlet.Route;
++import com.liferay.portal.kernel.util.InheritableMap;
++import com.liferay.portal.kernel.util.MapUtil;
++import com.liferay.portal.kernel.util.StringEncoder;
++import com.liferay.portal.kernel.util.StringParser;
++import com.liferay.portal.kernel.util.URLStringEncoder;
++
++public class RouteImpl implements Route {
++
++	public RouteImpl(String pattern) {
++		_pattern = pattern;
++
++		_stringParser = StringParser.create(pattern);
++
++		_stringParser.setStringEncoder(_urlEncoder);
++	}
++
++	@Override
++	public void addGeneratedParameter(String name, String pattern) {
++		if (_generatedParameters == null) {
++			_generatedParameters = new HashMap<>();
++		}
++
++		StringParser stringParser = StringParser.create(pattern);
++
++		_generatedParameters.put(name, stringParser);
++	}
++
++	@Override
++	public void addIgnoredParameter(String name) {
++		if (_ignoredParameters == null) {
++			_ignoredParameters = new HashSet<>();
++		}
++
++		_ignoredParameters.add(name);
++	}
++
++	@Override
++	public void addImplicitParameter(String name, String value) {
++		if (_implicitParameters == null) {
++			_implicitParameters = new HashMap<>();
++		}
++
++		_implicitParameters.put(name, value);
++	}
++
++	@Override
++	public void addOverriddenParameter(String name, String value) {
++		if (_overriddenParameters == null) {
++			_overriddenParameters = new HashMap<>();
++		}
++
++		_overriddenParameters.put(name, value);
++	}
++
++	@Override
++	public Map<String, StringParser> getGeneratedParameters() {
++		if (_generatedParameters == null) {
++			return Collections.emptyMap();
++		}
++
++		return _generatedParameters;
++	}
++
++	@Override
++	public Set<String> getIgnoredParameters() {
++		if (_ignoredParameters == null) {
++			return Collections.emptySet();
++		}
++
++		return _ignoredParameters;
++	}
++
++	@Override
++	public Map<String, String> getImplicitParameters() {
++		if (_implicitParameters == null) {
++			return Collections.emptyMap();
++		}
++
++		return _implicitParameters;
++	}
++
++	@Override
++	public Map<String, String> getOverriddenParameters() {
++		if (_overriddenParameters == null) {
++			return Collections.emptyMap();
++		}
++
++		return _overriddenParameters;
++	}
++
++	@Override
++	public String getPattern() {
++		return _pattern;
++	}
++
++	@Override
++	public String parametersToUrl(Map<String, String> parameters) {
++		InheritableMap<String, String> allParameters = new InheritableMap<>();
++
++		allParameters.setParentMap(parameters);
++
++		// The order is important because virtual parameters may sometimes be
++		// checked by implicit parameters
++
++		Map<String, StringParser> generatedParameters =
++			getGeneratedParameters();
++
++		for (Map.Entry<String, StringParser> entry :
++				generatedParameters.entrySet()) {
++
++			String name = entry.getKey();
++			StringParser stringParser = entry.getValue();
++
++			String value = MapUtil.getString(allParameters, name);
++
++			if (!stringParser.parse(value, allParameters)) {
++				return null;
++			}
++		}
++
++		Map<String, String> implicitParameters = getImplicitParameters();
++
++		for (Map.Entry<String, String> entry : implicitParameters.entrySet()) {
++			String name = entry.getKey();
++			String value = entry.getValue();
++
++			if (!value.equals(MapUtil.getString(allParameters, name))) {
++				return null;
++			}
++		}
++
++		String url = _stringParser.build(allParameters);
++
++		if (url == null) {
++			return null;
++		}
++
++		for (String name : generatedParameters.keySet()) {
++
++			// Virtual parameters will never be placed in the query string, so
++			// parameters is modified directly instead of allParameters
++
++			parameters.remove(name);
++		}
++
++		for (String name : implicitParameters.keySet()) {
++			parameters.remove(name);
++		}
++
++		for (String name : getIgnoredParameters()) {
++			parameters.remove(name);
++		}
++
++		return url;
++	}
++
++	@Override
++	public boolean urlToParameters(String url, Map<String, String> parameters) {
++		if (!_stringParser.parse(url, parameters)) {
++			return false;
++		}
++
++		parameters.putAll(getImplicitParameters());
++		parameters.putAll(getOverriddenParameters());
++
++		// The order is important because generated parameters may be dependent
++		// on implicit parameters or overridden parameters
++
++		Map<String, StringParser> generatedParameters =
++			getGeneratedParameters();
++
++		for (Map.Entry<String, StringParser> entry :
++				generatedParameters.entrySet()) {
++
++			StringParser stringParser = entry.getValue();
++
++			String value = stringParser.build(parameters);
++
++			// Generated parameters are not guaranteed to be created. The format
++			// of the virtual parameters in the route pattern must match their
++			// format in the generated parameter.
++
++			if (value != null) {
++				parameters.put(entry.getKey(), value);
++			}
++		}
++
++		return true;
++	}
++
++	private static final StringEncoder _urlEncoder = new URLStringEncoder();
++
++	private Map<String, StringParser> _generatedParameters;
++	private Set<String> _ignoredParameters;
++	private Map<String, String> _implicitParameters;
++	private Map<String, String> _overriddenParameters;
++	private final String _pattern;
++	private final StringParser _stringParser;
++
++}
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RouterImpl.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RouterImpl.java
+new file mode 100644
+index 0000000..828c1ef
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/route/RouterImpl.java
+@@ -0,0 +1,60 @@
++package com.liferay.remote.web.component.admin.web.internal.route;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++
++import com.liferay.portal.kernel.portlet.Route;
++import com.liferay.portal.kernel.portlet.Router;
++
++public class RouterImpl  implements Router {
++
++	public RouterImpl() {
++		_routes = new ArrayList<>();
++	}
++
++	public RouterImpl(int size) {
++		_routes = new ArrayList<>(size);
++	}
++
++	@Override
++	public Route addRoute(String pattern) {
++		Route route = new RouteImpl(pattern);
++
++		_routes.add(route);
++
++		return route;
++	}
++
++	@Override
++	public List<Route> getRoutes() {
++		return new ArrayList<>(_routes);
++	}
++
++	@Override
++	public String parametersToUrl(Map<String, String> parameters) {
++		for (Route route : _routes) {
++			String url = route.parametersToUrl(parameters);
++
++			if (url != null) {
++				return url;
++			}
++		}
++
++		return null;
++	}
++
++	@Override
++	public boolean urlToParameters(String url, Map<String, String> parameters) {
++		for (Route route : _routes) {
++			if (route.urlToParameters(url, parameters)) {
++				return true;
++			}
++		}
++
++		return false;
++	}
++
++	private final List<Route> _routes;
++
++}
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/spa/SPAPortletFilter.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/spa/SPAPortletFilter.java
+new file mode 100644
+index 0000000..27fd4cc
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/spa/SPAPortletFilter.java
+@@ -0,0 +1,177 @@
++/**
++ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
++ *
++ * This library is free software; you can redistribute it and/or modify it under
++ * the terms of the GNU Lesser General Public License as published by the Free
++ * Software Foundation; either version 2.1 of the License, or (at your option)
++ * any later version.
++ *
++ * This library is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
++ * details.
++ */
++
++package com.liferay.remote.web.component.admin.web.internal.spa;
++
++import java.io.IOException;
++import java.io.PrintWriter;
++import java.util.List;
++
++import javax.portlet.PortletException;
++import javax.portlet.PortletMode;
++import javax.portlet.RenderRequest;
++import javax.portlet.RenderResponse;
++import javax.portlet.RenderURL;
++import javax.portlet.WindowState;
++import javax.portlet.filter.FilterChain;
++import javax.portlet.filter.FilterConfig;
++import javax.portlet.filter.PortletFilter;
++import javax.portlet.filter.RenderFilter;
++
++import org.osgi.service.component.annotations.Component;
++import org.osgi.service.component.annotations.Reference;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
++import com.liferay.portal.kernel.exception.PortalException;
++import com.liferay.portal.kernel.model.LayoutTypePortlet;
++import com.liferay.portal.kernel.model.Portlet;
++import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
++import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
++import com.liferay.portal.kernel.portlet.LiferayPortletURL;
++import com.liferay.portal.kernel.portlet.Route;
++import com.liferay.portal.kernel.portlet.Router;
++import com.liferay.portal.kernel.security.permission.ActionKeys;
++import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
++import com.liferay.portal.kernel.service.permission.LayoutPermission;
++import com.liferay.portal.kernel.theme.ThemeDisplay;
++import com.liferay.portal.kernel.util.Portal;
++import com.liferay.portal.kernel.util.PortalUtil;
++import com.liferay.portal.kernel.util.WebKeys;
++
++@Component(
++	factory = "spa.portlet.filter",
++	service = PortletFilter.class
++)
++public class SPAPortletFilter implements RenderFilter {
++
++	@Override
++	public void init(FilterConfig filterConfig) throws PortletException {
++		// unused
++	}
++
++	@Override
++	public void destroy() {
++		// unused
++	}
++
++	@Override
++	public void doFilter(
++			RenderRequest renderRequest, RenderResponse response, FilterChain chain)
++		throws IOException, PortletException {
++
++		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
++
++		if (themeDisplay != null) {
++			LayoutTypePortlet layoutTypePortlet = themeDisplay.getLayoutTypePortlet();
++
++			if ((layoutTypePortlet != null) && "spa".equals(layoutTypePortlet.getLayoutTemplateId())) {
++				LiferayPortletRequest liferayPortletRequest = (LiferayPortletRequest)renderRequest;
++
++				List<Portlet> columnPortlets = layoutTypePortlet.getAllPortlets("column-2");
++
++				Portlet portlet = liferayPortletRequest.getPortlet();
++
++				if (columnPortlets.stream().anyMatch(portlet::equals)) {
++					if (WindowState.NORMAL == renderRequest.getWindowState()) {
++						try {
++							if (_layoutPermission.contains(
++									PermissionThreadLocal.getPermissionChecker(),
++									layoutTypePortlet.getLayout(), ActionKeys.UPDATE)) {
++
++								String layoutFriendlyURL = _portal.getLayoutRelativeURL(themeDisplay.getLayout(), themeDisplay);
++
++								PrintWriter writer = response.getWriter();
++
++								FriendlyURLMapper friendlyURLMapper = portlet.getFriendlyURLMapperInstance();
++
++								RenderURL renderURL = response.createRenderURL();
++								renderURL.setWindowState(WindowState.MAXIMIZED);
++								renderURL.setPortletMode(PortletMode.VIEW);
++
++								String portletURL;
++
++								if (friendlyURLMapper != null) {
++									portletURL = friendlyURLMapper.buildPath((LiferayPortletURL)renderURL);
++
++									if (friendlyURLMapper.isCheckMappingWithPrefix()) {
++										portletURL = "/-" + portletURL;
++									}
++
++									portletURL = layoutFriendlyURL + portletURL;
++								}
++								else {
++									portletURL = renderURL.toString();
++								}
++
++								writer.append("Standard Routes:<ul>");
++								writer.append("<li><a href=\"");
++								writer.append(portletURL);
++								writer.append("\">");
++								writer.append(portletURL);
++								writer.append("</a></li>");
++								writer.append("</ul>");
++
++								if (friendlyURLMapper != null) {
++									writer.append("Custom Routes:<ul>");
++
++									friendlyURLMapper.getRouter().getRoutes().stream().forEach(route -> {
++										writer.append("<li><a href=\"");
++
++										StringBuilder sb = new StringBuilder();
++
++										sb.append(layoutFriendlyURL);
++										sb.append("/-/");
++										sb.append(friendlyURLMapper.getMapping());
++										sb.append(route.getPattern());
++
++										writer.append(sb.toString());
++										writer.append("\">");
++										writer.append(sb.toString());
++										writer.append("</a></li>");
++									});
++
++									writer.append("</ul>");
++								}
++
++								writer.flush();
++							}
++						}
++						catch (Exception exception) {
++							if (_log.isErrorEnabled()) {
++								_log.error(
++									"Failure rendering alternate SPA view for {}",
++									portlet, exception);
++							}
++						}
++
++						return;
++					}
++				}
++			}
++		}
++
++		chain.doFilter(renderRequest, response);
++	}
++
++	@Reference
++	private LayoutPermission _layoutPermission;
++
++	@Reference
++	private Portal _portal;
++
++	private static final Logger _log = LoggerFactory.getLogger(
++		SPAPortletFilter.class);
++
++}
+diff --git a/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/spa/SPAPortletFilterManager.java b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/spa/SPAPortletFilterManager.java
+new file mode 100644
+index 0000000..3875b91
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/java/com/liferay/remote/web/component/admin/web/internal/spa/SPAPortletFilterManager.java
+@@ -0,0 +1,74 @@
++/**
++ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
++ *
++ * This library is free software; you can redistribute it and/or modify it under
++ * the terms of the GNU Lesser General Public License as published by the Free
++ * Software Foundation; either version 2.1 of the License, or (at your option)
++ * any later version.
++ *
++ * This library is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
++ * details.
++ */
++
++package com.liferay.remote.web.component.admin.web.internal.spa;
++
++import static org.osgi.service.component.annotations.ReferenceCardinality.MULTIPLE;
++import static org.osgi.service.component.annotations.ReferencePolicyOption.GREEDY;
++
++import java.util.Collections;
++import java.util.Dictionary;
++import java.util.Hashtable;
++import java.util.List;
++
++import org.osgi.service.component.ComponentFactory;
++import org.osgi.service.component.ComponentInstance;
++import org.osgi.service.component.annotations.Activate;
++import org.osgi.service.component.annotations.Component;
++import org.osgi.service.component.annotations.Deactivate;
++import org.osgi.service.component.annotations.Reference;
++
++import com.liferay.portal.kernel.model.Portlet;
++
++@Component
++public class SPAPortletFilterManager {
++
++	@Activate
++	protected void activate() {
++		Dictionary<String, Object> componentProperties = new Hashtable<>();
++
++		String[] portletNames = _portlets.stream().map(
++			Portlet::getRootPortletId
++		).distinct().toArray(
++			String[]::new
++		);
++
++		componentProperties.put(
++			"filter.lifecycles", Collections.singleton("RENDER_PHASE"));
++		componentProperties.put("javax.portlet.name", portletNames);
++		componentProperties.put("preinitialized.filter", "true");
++
++		_portletFilterInstance = _portletFilterFactory.newInstance(
++			componentProperties);
++	}
++
++	@Deactivate
++	protected void deactivate() {
++		_portletFilterInstance.dispose();
++
++		_portletFilterInstance = null;
++	}
++
++	@Reference(target = "(component.factory=spa.portlet.filter)")
++	private ComponentFactory _portletFilterFactory;
++
++	@Reference(
++		cardinality = MULTIPLE,
++		policyOption = GREEDY
++	)
++	private List<Portlet> _portlets;
++
++	private volatile ComponentInstance _portletFilterInstance;
++
++}
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/resources/META-INF/liferay-layout-templates.xml b/modules/remote-web-component-admin-web/src/main/resources/META-INF/liferay-layout-templates.xml
+new file mode 100644
+index 0000000..d67482e
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/resources/META-INF/liferay-layout-templates.xml
+@@ -0,0 +1,11 @@
++<?xml version="1.0"?>
++<!DOCTYPE layout-templates PUBLIC "-//Liferay//DTD Layout Templates 7.0.0//EN" "http://www.liferay.com/dtd/liferay-layout-templates_7_0_0.dtd">
++
++<layout-templates>
++	<custom>
++		<layout-template id="spa">
++			<template-path>/layouttpl/custom/spa.ftl</template-path>
++			<thumbnail-path>/layouttpl/custom/1_column.png</thumbnail-path>
++		</layout-template>
++	</custom>
++</layout-templates>
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/resources/META-INF/portlet-preferences/default-preferences.xml b/modules/remote-web-component-admin-web/src/main/resources/META-INF/portlet-preferences/default-preferences.xml
+new file mode 100644
+index 0000000..6ce2e10
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/resources/META-INF/portlet-preferences/default-preferences.xml
+@@ -0,0 +1,8 @@
++<?xml version="1.0"?>
++
++<portlet-preferences>
++    <preference>
++        <name>portletSetupPortletDecoratorId</name>
++        <value>barebone</value>
++    </preference>
++</portlet-preferences>
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/resources/META-INF/resources/layouttpl/custom/spa.ftl b/modules/remote-web-component-admin-web/src/main/resources/META-INF/resources/layouttpl/custom/spa.ftl
+new file mode 100644
+index 0000000..af60e2b
+--- /dev/null
++++ b/modules/remote-web-component-admin-web/src/main/resources/META-INF/resources/layouttpl/custom/spa.ftl
+@@ -0,0 +1,27 @@
++<div class="columns-spa" id="main-content" role="main">
++	<div class="portlet-layout row">
++		<div class="col-md-12 portlet-column portlet-column-only" id="column-1">
++			${processor.processColumn("column-1", "portlet-column-content portlet-column-content-only")}
++		</div>
++	</div>
++
++	<div class="portlet-layout row">
++		<#if themeDisplay??>
++			<#assign permissionChecker = (themeDisplay.getPermissionChecker())!>
++			<#assign layout = (themeDisplay.getLayout())!>
++			<#if permissionChecker?? && layout??>
++				<#if (layoutPermission.contains(permissionChecker, layout, "UPDATE"))!>
++					<#assign locale = themeDisplay.getLocale()>
++
++					<div>
++						<@liferay.language key="place-portlets-to-be-loaded-via-SPA-routing-bellow-this-line" />
++					</div>
++					<hr />
++				</#if>
++			</#if>
++		</#if>
++		<div class="col-md-12 portlet-column portlet-column-only" id="column-2">
++			${processor.processColumn("column-2", "portlet-column-content portlet-column-content-only")}
++		</div>
++	</div>
++</div>
+\ No newline at end of file
+diff --git a/modules/remote-web-component-admin-web/src/main/resources/META-INF/resources/layouttpl/custom/spa.png b/modules/remote-web-component-admin-web/src/main/resources/META-INF/resources/layouttpl/custom/spa.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..5959303b1df285ef22bc1c9bfe30780883157ad0
+GIT binary patch
+literal 308
+zcmeAS@N?(olHy`uVBq!ia0vp^6(G#P1SGeyEo=o+k|nMYCBgY=CFO}lsSJ)O`AMk?
+zp1FzXsX?iUDV2pMQ*D5Xu6epRhE&{ob7doMgMvU?pnn8&c~anwla>Y>x0*J#JgU9B
+zRli=(OS=79xe^0!)c@1>AFt~?ab(@Uh%MI{qZT-Fn`B&I;sr9A#Xt<HEe;^Y0#*=%
+zO&7#4$!G*IKq?#AKq?_xq)eFb$dYVeRQMD#jR>F>_cn(&FfwFLW3Ruo&wn$}hYX&s
+KelF{r5}E*%ENX%P
+
+literal 0
+HcmV?d00001
+
+diff --git a/modules/remote-web-component-admin-web/src/main/resources/content/Language.properties b/modules/remote-web-component-admin-web/src/main/resources/content/Language.properties
+index 983b4ff..971b16c 100644
+--- a/modules/remote-web-component-admin-web/src/main/resources/content/Language.properties
++++ b/modules/remote-web-component-admin-web/src/main/resources/content/Language.properties
+@@ -1,2 +1,17 @@
++element-name=Custom Element Name
++element-name-description=The custom HTML element name of the Web Component
++instanceable=Instanceable
++instanceable-desciption=Can the Web Component be added to the page more than once?
++name=Web Component Name
++name-description=A named that clearly describes the web component's function. (Also used as the portlet title)
++portlet-display-category=Portlet Display Category
++portlet-display-category-desciption=Under which category should the web component appear in the widget list
++portlet-service-properties=Web Component Configuration
++portlet-service-properties-description=Use java properties file syntax. These are passed as attributes to the web component. Dots (".") in keys are replaced by dashes ("-") and then the key is prefixed by "data-config-". (Note that these are also passed as portlet service properties and may override some defaults set by the wrapper)
+ remote-web-component-configuration-name=Remote Web Component
+-category.remote-web-components=Remote Web Components
+\ No newline at end of file
++routes=Web Component Routes
++routes-description=Web Component Routes are defined by the following pattern "{fullPageFriendlyUrl}/-/{element-name}[/{instanceId}]?[route]?". Each route must begin with a forward slash ("/"). Note that if the web component is configured with "Instanceable" the route will be prefixed by "/{instanceId}" before appending it
++web-component-css-url=Web Component CSS URL
++web-component-css-url-description=The URL of a CSS file that contains the web component custom styles
++web-component-url=Web Component URL
++web-component-url-description=The URL of the Javascript file that contains the web component custom element
+\ No newline at end of file

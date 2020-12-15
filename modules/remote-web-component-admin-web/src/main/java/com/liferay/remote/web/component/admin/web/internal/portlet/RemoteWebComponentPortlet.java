@@ -15,42 +15,49 @@
 package com.liferay.remote.web.component.admin.web.internal.portlet;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
+
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.portlet.Portlet;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Iván Zaera Avellón
  */
+@Component(
+	factory = "remote.web.component.portlet",
+	service = Portlet.class
+)
 public class RemoteWebComponentPortlet extends MVCPortlet {
-
-	public RemoteWebComponentPortlet(
-		RemoteWebComponentConfiguration remoteWebComponentEntry) {
-
-		_remoteWebComponentConfiguration = remoteWebComponentEntry;
-	}
 
 	public String getName() {
 		return _remoteWebComponentConfiguration.name();
@@ -58,44 +65,6 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 
 	public String getName(Locale locale) {
 		return _remoteWebComponentConfiguration.name();
-	}
-
-	public synchronized void register(BundleContext bundleContext) {
-		if (_serviceRegistration != null) {
-			throw new IllegalStateException("Portlet is already registered");
-		}
-
-		Dictionary<String, Object> properties = new Hashtable<>();
-
-		properties.put(
-			"com.liferay.portlet.css-class-wrapper",
-			"portlet-remote-web-component");
-		properties.put(
-			"com.liferay.portlet.display-category", "category.sample");
-		properties.put(
-			"com.liferay.portlet.header-portlet-css", "/display/css/main.css");
-		properties.put("com.liferay.portlet.instanceable", true);
-		properties.put("javax.portlet.name", _getPortletName());
-		properties.put("javax.portlet.security-role-ref", "power-user,user");
-		properties.put(
-			"javax.portlet.resource-bundle", _getResourceBundleName());
-		properties.put(
-			"com.liferay.portlet.header-portal-javascript",
-			_remoteWebComponentConfiguration.webComponentUrl());
-
-		_serviceRegistration = bundleContext.registerService(
-			Portlet.class, this, properties);
-
-		properties = new Hashtable<>();
-
-		properties.put("resource.bundle.base.name", _getResourceBundleName());
-		properties.put(
-			"servlet.context.name", "remote-web-component-admin-web");
-
-		_resourceBundleLoaderServiceRegistration =
-			bundleContext.registerService(
-				ResourceBundleLoader.class,
-				locale -> _getResourceBundle(locale), properties);
 	}
 
 	@Override
@@ -107,9 +76,61 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 
 			String elementName = _remoteWebComponentConfiguration.elementName();
 
+			ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			String basePath = _portal.getLayoutRelativeURL(themeDisplay.getLayout(), themeDisplay);
+
 			printWriter.append(StringPool.LESS_THAN);
 			printWriter.append(elementName);
-			printWriter.append(" store-descriptor=\"Liferay.State\"");
+			printWriter.append(" id=\"remote-web-component-");
+			printWriter.append(renderResponse.getNamespace());
+			printWriter.append("\" base-path=\"");
+			printWriter.append(basePath);
+			printWriter.append("\" namespace=\"");
+			printWriter.append(renderResponse.getNamespace());
+			printWriter.append("\" ");
+			printWriter.append(" store-descriptor=\"Liferay.State\" ");
+
+			renderRequest.getParameterMap().forEach((k, v) -> {
+				printWriter.append("data-param-");
+				printWriter.append(k);
+				printWriter.append("=\"");
+				printWriter.append(v.length > 1 ? StringUtil.merge(v, " ") : v[0]);
+				printWriter.append("\" ");
+			});
+
+			renderRequest.getPublicParameterMap().forEach((k, v) -> {
+				printWriter.append("data-param-");
+				printWriter.append(k);
+				printWriter.append("=\"");
+				printWriter.append(v.length > 1 ? StringUtil.merge(v, " ") : v[0]);
+				printWriter.append("\" ");
+			});
+
+			StringBuffer sb = new StringBuffer();
+
+			_webComponentConfigurationAttributes.forEach((k, v) -> {
+				sb.append("data-config-");
+				sb.append(k.replaceAll("\\.", "-"));
+				sb.append("=\"");
+
+				if (v.getClass().isArray()) {
+					sb.append(
+						Arrays.asList(v).stream().map(String::valueOf).collect(joining(" ")));
+				}
+				else if (v instanceof Collection) {
+					sb.append(
+						((Collection<?>)v).stream().map(String::valueOf).collect(joining(" ")));
+				}
+				else {
+					sb.append(String.valueOf(v));
+				}
+
+				sb.append("\" ");
+			});
+
+			printWriter.append(sb.toString());
+
 			printWriter.append(StringPool.GREATER_THAN);
 			printWriter.append("</");
 			printWriter.append(elementName);
@@ -117,60 +138,46 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 
 			printWriter.flush();
 		}
-		catch (IOException ioException) {
-			_log.error("Unable to render HTML output", ioException);
+		catch (Throwable throwable) {
+			_log.error(
+				"Unable to render web Component <{}>",
+				_remoteWebComponentConfiguration.elementName(),
+				throwable);
 		}
 	}
 
-	public synchronized void unregister() {
-		if (_serviceRegistration == null) {
-			throw new IllegalStateException("Portlet is not registered");
-		}
+	@Activate
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
 
-		_resourceBundleLoaderServiceRegistration.unregister();
-		_serviceRegistration.unregister();
+		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
+			RemoteWebComponentConfiguration.class, properties);
 
-		_resourceBundleLoaderServiceRegistration = null;
-		_serviceRegistration = null;
+		_webComponentConfigurationAttributes = properties.entrySet().stream().filter(
+			e -> _keyFilters.stream().noneMatch(p -> p.test(e.getKey()))
+		).collect(toMap(Entry::getKey, Entry::getValue));
 	}
 
-	private String _getPortletName() {
-		return PortalUtil.getJsSafePortletId(
-			"remote_web_component_" +
-				_remoteWebComponentConfiguration.elementName());
-	}
+	@Reference
+	private Portal _portal;
 
-	private ResourceBundle _getResourceBundle(Locale locale) {
-		return new ResourceBundle() {
-
-			@Override
-			public Enumeration<String> getKeys() {
-				return Collections.enumeration(_labels.keySet());
-			}
-
-			@Override
-			protected Object handleGetObject(String key) {
-				return _labels.get(key);
-			}
-
-			private final Map<String, String> _labels = HashMapBuilder.put(
-				"javax.portlet.title." + _getPortletName(),
-				_remoteWebComponentConfiguration.name()
-			).build();
-
-		};
-	}
-
-	private String _getResourceBundleName() {
-		return _getPortletName() + ".Language";
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
+	private static final Logger _log = LoggerFactory.getLogger(
 		RemoteWebComponentPortlet.class);
 
-	private final RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
-	private ServiceRegistration<ResourceBundleLoader>
-		_resourceBundleLoaderServiceRegistration;
-	private ServiceRegistration<Portlet> _serviceRegistration;
+	private static final List<Predicate<String>> _keyFilters = Arrays.asList(
+		"component.id"::equals,
+		"component.name"::equals,
+		"service.pid"::equals,
+		"service.factoryPid"::equals,
+		"portletServiceProperties"::equals,
+		"routes"::equals,
+		k -> k.endsWith(".target"),
+		k -> k.startsWith("com.liferay.portlet."),
+		k -> k.startsWith("felix."),
+		k -> k.startsWith("javax.portlet.")
+	);
+
+	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
+	private volatile Map<String, Object> _webComponentConfigurationAttributes;
 
 }
