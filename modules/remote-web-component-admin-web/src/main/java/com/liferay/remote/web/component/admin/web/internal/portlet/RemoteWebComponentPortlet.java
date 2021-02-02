@@ -15,21 +15,19 @@
 package com.liferay.remote.web.component.admin.web.internal.portlet;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
-import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -37,8 +35,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.portlet.MimeResponse.Copy;
 import javax.portlet.Portlet;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -71,46 +70,37 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 	public void render(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
+		String elementName = _remoteWebComponentConfiguration.elementName();
+
 		try {
 			PrintWriter printWriter = renderResponse.getWriter();
 
-			String elementName = _remoteWebComponentConfiguration.elementName();
+			LiferayPortletURL renderURL = (LiferayPortletURL)renderResponse.createRenderURL(Copy.PUBLIC);
 
-			ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+			renderURL.addParameterIncludedInPath("p_p_state");
 
-			String basePath = _portal.getLayoutRelativeURL(themeDisplay.getLayout(), themeDisplay);
+			String routerBaseSelf = HttpUtil.removeDomain(renderURL.toString());
+			int portletURLSeparator = routerBaseSelf.indexOf("/-/");
+			String routerBasePage = routerBaseSelf.substring(0, portletURLSeparator);
+			int pageSeparator = routerBasePage.lastIndexOf("/");
+			String routerBaseSite = routerBasePage.substring(0, pageSeparator);
 
 			printWriter.append(StringPool.LESS_THAN);
 			printWriter.append(elementName);
-			printWriter.append(" id=\"remote-web-component-");
+			printWriter.append(" id=\"");
 			printWriter.append(renderResponse.getNamespace());
-			printWriter.append("\" base-path=\"");
-			printWriter.append(basePath);
-			printWriter.append("\" namespace=\"");
-			printWriter.append(renderResponse.getNamespace());
-			printWriter.append("\" ");
-			printWriter.append(" store-descriptor=\"Liferay.State\" ");
-
-			renderRequest.getParameterMap().forEach((k, v) -> {
-				printWriter.append("data-param-");
-				printWriter.append(k);
-				printWriter.append("=\"");
-				printWriter.append(v.length > 1 ? StringUtil.merge(v, " ") : v[0]);
-				printWriter.append("\" ");
-			});
-
-			renderRequest.getPublicParameterMap().forEach((k, v) -> {
-				printWriter.append("data-param-");
-				printWriter.append(k);
-				printWriter.append("=\"");
-				printWriter.append(v.length > 1 ? StringUtil.merge(v, " ") : v[0]);
-				printWriter.append("\" ");
-			});
+			printWriter.append("\" router-base-self=\"");
+			printWriter.append(routerBaseSelf);
+			printWriter.append("\" router-base-page=\"");
+			printWriter.append(routerBasePage);
+			printWriter.append("\" router-base-site=\"");
+			printWriter.append(routerBaseSite);
+			printWriter.append("\" store-descriptor=\"Liferay.State\"");
 
 			StringBuffer sb = new StringBuffer();
 
 			_webComponentConfigurationAttributes.forEach((k, v) -> {
-				sb.append("data-config-");
+				sb.append(" data-config-");
 				sb.append(k.replaceAll("\\.", "-"));
 				sb.append("=\"");
 
@@ -126,7 +116,7 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 					sb.append(String.valueOf(v));
 				}
 
-				sb.append("\" ");
+				sb.append("\"");
 			});
 
 			printWriter.append(sb.toString());
@@ -141,8 +131,7 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 		catch (Throwable throwable) {
 			_log.error(
 				"Unable to render web Component <{}>",
-				_remoteWebComponentConfiguration.elementName(),
-				throwable);
+				elementName, throwable);
 		}
 	}
 
@@ -164,17 +153,21 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 	private static final Logger _log = LoggerFactory.getLogger(
 		RemoteWebComponentPortlet.class);
 
+	private static final List<String> _configMethodNames = Stream.of(
+		RemoteWebComponentConfiguration.class.getDeclaredMethods()
+	).map(Method::getName).collect(toList());
+
 	private static final List<Predicate<String>> _keyFilters = Arrays.asList(
 		"component.id"::equals,
 		"component.name"::equals,
+		"configuration.cleaner.ignore"::equals,
 		"service.pid"::equals,
 		"service.factoryPid"::equals,
-		"portletServiceProperties"::equals,
-		"routes"::equals,
 		k -> k.endsWith(".target"),
 		k -> k.startsWith("com.liferay.portlet."),
 		k -> k.startsWith("felix."),
-		k -> k.startsWith("javax.portlet.")
+		k -> k.startsWith("javax.portlet."),
+		_configMethodNames::contains
 	);
 
 	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;

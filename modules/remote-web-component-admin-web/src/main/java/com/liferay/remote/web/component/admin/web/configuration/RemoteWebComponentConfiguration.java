@@ -37,8 +37,7 @@ import aQute.bnd.annotation.metatype.Meta;
 							value = {
 								"name",
 								"elementName",
-								"webComponentUrl",
-								"webComponentCssUrl"
+								"webComponentUrl"
 							}
 						)
 					}
@@ -48,6 +47,7 @@ import aQute.bnd.annotation.metatype.Meta;
 						@DDMFormLayoutColumn(
 							size = 6,
 							value = {
+								"portletAlias",
 								"instanceable"
 							}
 						),
@@ -64,7 +64,8 @@ import aQute.bnd.annotation.metatype.Meta;
 						@DDMFormLayoutColumn(
 							size = 12,
 							value = {
-								"routes",
+								"webComponentCssUrl",
+								//"routes",
 								"portletServiceProperties"
 							}
 						)
@@ -117,7 +118,7 @@ public interface RemoteWebComponentConfiguration {
 		tip = "%web-component-url-description",
 		required = true
 	)
-	public String webComponentUrl();
+	public String[] webComponentUrl();
 
 	@Meta.AD(
 		name = "web-component-css-url",
@@ -128,7 +129,18 @@ public interface RemoteWebComponentConfiguration {
 		label = "%web-component-css-url",
 		tip = "%web-component-css-url-description"
 	)
-	public String webComponentCssUrl();
+	public String[] webComponentCssUrl();
+
+	@Meta.AD(
+		name = "portlet-alias",
+		description = "portlet-alias-description",
+		required = false
+	)
+	@DDMFormField(
+		label = "%portlet-alias",
+		tip = "%portlet-alias-description"
+	)
+	public String portletAlias();
 
 	@Meta.AD(
 		name = "instanceable",
@@ -159,17 +171,17 @@ public interface RemoteWebComponentConfiguration {
 	)
 	public String portletServiceProperties();
 
-	@Meta.AD(
-		name = "routes",
-		description = "routes-description",
-		deflt = "",
-		required = false
-	)
-	@DDMFormField(
-		label = "%routes",
-		tip = "%routes-description",
-		predefinedValue = ""
-	)
+//	@Meta.AD(
+//		name = "routes",
+//		description = "routes-description",
+//		deflt = "",
+//		required = false
+//	)
+//	@DDMFormField(
+//		label = "%routes",
+//		tip = "%routes-description",
+//		predefinedValue = ""
+//	)
 	public String[] routes();
 
 }

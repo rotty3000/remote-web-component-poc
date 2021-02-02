@@ -1,6 +1,7 @@
 package com.liferay.remote.web.component.admin.web.internal.route;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class RouterImpl  implements Router {
 	@Override
 	public String parametersToUrl(Map<String, String> parameters) {
 		for (Route route : _routes) {
-			String url = route.parametersToUrl(parameters);
+			String url = route.parametersToUrl(new HashMap<>(parameters));
 
 			if (url != null) {
 				return url;

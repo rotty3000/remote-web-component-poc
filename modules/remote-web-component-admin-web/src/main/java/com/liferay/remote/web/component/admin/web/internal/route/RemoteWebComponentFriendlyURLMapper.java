@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.Route;
 import com.liferay.portal.kernel.portlet.Router;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
 
 @Component(
@@ -45,10 +46,16 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
 			RemoteWebComponentConfiguration.class, properties);
 
+		_mapping = Validator.isNotNull(_remoteWebComponentConfiguration.portletAlias()) ?
+			_remoteWebComponentConfiguration.portletAlias() :
+			_remoteWebComponentConfiguration.elementName();
+
 		boolean instanceable = _remoteWebComponentConfiguration.instanceable();
 		Router router = new RouterImpl();
 
-		if ((_remoteWebComponentConfiguration.routes().length == 1) && _remoteWebComponentConfiguration.routes()[0].length() == 0) {
+		if ((_remoteWebComponentConfiguration.routes() == null) ||
+			((_remoteWebComponentConfiguration.routes().length == 1) &&
+			 (_remoteWebComponentConfiguration.routes()[0].length() == 0))) {
 			// skip
 		}
 		else {
@@ -56,8 +63,8 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 				if (!validate(routePattern)) {
 					if (_log.isErrorEnabled()) {
 						_log.error(
-								"Invalid route [{}] was specified for web component <{}>",
-								routePattern, _remoteWebComponentConfiguration.elementName());
+							"Invalid route [{}] was specified for web component <{}>",
+							routePattern, _remoteWebComponentConfiguration.elementName());
 					}
 
 					continue;
@@ -67,9 +74,11 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 
 				route.addImplicitParameter("p_p_lifecycle", "0");
 				route.addImplicitParameter("p_p_mode", PortletMode.VIEW.toString());
-				route.addImplicitParameter("p_p_state", WindowState.MAXIMIZED.toString());
+				route.addImplicitParameter("p_p_state", WindowState.NORMAL.toString());
 			}
 		}
+
+		// Simple render URL with normal state
 
 		String baseRoute = instanceable ? "/{instanceId}" : "";
 
@@ -77,8 +86,27 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 			Route route = router.addRoute(baseRoute);
 
 			route.addImplicitParameter("p_p_lifecycle", "0");
-			route.addImplicitParameter("p_p_mode", PortletMode.VIEW.toString());
-			route.addImplicitParameter("p_p_state", WindowState.MAXIMIZED.toString());
+			route.addImplicitParameter("p_p_state", WindowState.NORMAL.toString());
+		}
+
+		// Render URL with any state
+
+		baseRoute = (instanceable ? "/{instanceId}" : "") + "/{p_p_state}";
+
+		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
+			Route route = router.addRoute(baseRoute);
+
+			route.addImplicitParameter("p_p_lifecycle", "0");
+		}
+
+		// Render URL with any state and a path
+
+		baseRoute = (instanceable ? "/{instanceId}" : "") + "/{p_p_state}/{%path:.*}";
+
+		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
+			Route route = router.addRoute(baseRoute);
+
+			route.addImplicitParameter("p_p_lifecycle", "0");
 		}
 
 		super.router = router;
@@ -107,12 +135,7 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 
 	@Override
 	public String getMapping() {
-		return _remoteWebComponentConfiguration.elementName();
-	}
-
-	@Override
-	public boolean isCheckMappingWithPrefix() {
-		return super.isCheckMappingWithPrefix();
+		return _mapping;
 	}
 
 	@Override
@@ -127,6 +150,7 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 	private static final Logger _log = LoggerFactory.getLogger(
 		RemoteWebComponentFriendlyURLMapper.class);
 
+	private volatile String _mapping;
 	private RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
 
 }

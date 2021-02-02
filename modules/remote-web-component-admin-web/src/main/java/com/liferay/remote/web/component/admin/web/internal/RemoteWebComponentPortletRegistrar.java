@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
 
+import static com.liferay.portal.kernel.util.Validator.isNotNull;
+
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -56,10 +58,10 @@ public class RemoteWebComponentPortletRegistrar {
 		_remoteWebComponentConfiguration = ConfigurableUtil.createConfigurable(
 			RemoteWebComponentConfiguration.class, properties);
 
+		_elementName = _remoteWebComponentConfiguration.elementName();
+
 		if (_log.isInfoEnabled()) {
-			_log.info(
-				"Starting remote web component {}",
-				_remoteWebComponentConfiguration.name());
+			_log.info("Starting remote web component {}", _elementName);
 		}
 
 		Dictionary<String, Object> componentProperties = new Hashtable<>(properties);
@@ -87,7 +89,7 @@ public class RemoteWebComponentPortletRegistrar {
 			if (_log.isErrorEnabled()) {
 				_log.error(
 					"Could not parse portlet service properties for {}",
-					_getPortletName(), ioe);
+					_elementName, ioe);
 			}
 		}
 
@@ -95,15 +97,15 @@ public class RemoteWebComponentPortletRegistrar {
 			"com.liferay.portlet.header-portal-javascript",
 			_remoteWebComponentConfiguration.webComponentUrl());
 
-		String webComponentCSSUrl = _remoteWebComponentConfiguration.webComponentCssUrl();
+		String[] webComponentCSSUrl = _remoteWebComponentConfiguration.webComponentCssUrl();
 
 		if (Validator.isNotNull(webComponentCSSUrl)) {
 			componentProperties.put(
-				"com.liferay.portlet.header-portlet-css",
+				"com.liferay.portlet.header-portal-css",
 				webComponentCSSUrl);
 		}
 
-		String displayCategory = Validator.isNotNull(
+		String displayCategory = isNotNull(
 			_remoteWebComponentConfiguration.portletDisplayCategory()) ?
 				_remoteWebComponentConfiguration.portletDisplayCategory() : "sample";
 
@@ -112,6 +114,8 @@ public class RemoteWebComponentPortletRegistrar {
 		componentProperties.put(
 			"com.liferay.portlet.instanceable",
 			String.valueOf(_remoteWebComponentConfiguration.instanceable()));
+		componentProperties.put(
+			"com.liferay.portlet.single-page-application", "false");
 		componentProperties.put(
 			"javax.portlet.resource-bundle", _getResourceBundleName());
 
@@ -145,18 +149,14 @@ public class RemoteWebComponentPortletRegistrar {
 				componentProperties);
 
 		if (_log.isInfoEnabled()) {
-			_log.info(
-				"Started remote app entry {}",
-				_remoteWebComponentConfiguration.name());
+			_log.info("Started remote web component {}", _elementName);
 		}
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		if (_log.isInfoEnabled()) {
-			_log.info(
-				"Stopping remote web component {}",
-				_remoteWebComponentConfiguration.name());
+			_log.info("Stopping remote web component {}", _elementName);
 		}
 
 		_portletInstance.dispose();
@@ -168,15 +168,14 @@ public class RemoteWebComponentPortletRegistrar {
 		_friendlyURLMapperInstance = null;
 
 		if (_log.isInfoEnabled()) {
-			_log.info(
-				"Stoped remote web component {}",
-				_remoteWebComponentConfiguration.name());
+			_log.info("Stopped remote web component {}", _elementName);
 		}
 	}
 
 	private String _getPortletName() {
+		final String portletAlias = _remoteWebComponentConfiguration.portletAlias();
 		return PortalUtil.getJsSafePortletId(
-			"rwc_" + _remoteWebComponentConfiguration.elementName());
+			"rwc_" + (isNotNull(portletAlias) ? portletAlias : _elementName));
 	}
 
 	private String _getResourceBundleName() {
@@ -196,6 +195,7 @@ public class RemoteWebComponentPortletRegistrar {
 		RemoteWebComponentPortletRegistrar.class);
 
 	private volatile ComponentInstance _bundleResourceLoaderInstance;
+	private volatile String _elementName;
 	private volatile ComponentInstance _friendlyURLMapperInstance;
 	private volatile ComponentInstance _portletInstance;
 	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
