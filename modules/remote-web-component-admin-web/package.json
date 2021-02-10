@@ -1,0 +1,17 @@
+{
+  "name": "redux-micro-frontend-bundle",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "redux-micro-frontend": "^1.0.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.20.1",
+    "webpack-cli": "^4.5.0"
+  },
+  "scripts": {
+    "build": "npx webpack",
+    "clean": "rm -rf build/resources/main/META-INF/resources/*"
+  }
+}
