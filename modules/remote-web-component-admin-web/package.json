@@ -1,0 +1,12 @@
+{
+  "name": "redux-micro-frontend-bundle",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "redux-micro-frontend": "^1.0.1"
+  },
+  "scripts": {
+    "build": "babel --source-maps -d build src && npm run copy-assets && liferay-npm-bundler"
+  }
+}
