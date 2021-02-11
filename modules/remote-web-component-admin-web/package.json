@@ -6,7 +6,21 @@
   "dependencies": {
     "redux-micro-frontend": "^1.0.1"
   },
+  "devDependencies": {
+    "liferay-npm-bundler": "^2.18.2",
+    "liferay-npm-build-support": "^2.18.2",
+    "copy-webpack-plugin": "4.6.0",
+    "webpack": "4.29.6",
+    "webpack-cli": "3.3.0",
+    "webpack-dev-server": "3.2.1",
+    "babel-cli": "6.26.0",
+    "babel-preset-env": "1.7.0",
+    "babel-loader": "7.1.5"
+  },
   "scripts": {
-    "build": "babel --source-maps -d build src && npm run copy-assets && liferay-npm-bundler"
+    "build": "babel --source-maps -d build src && npm run copy-assets && liferay-npm-bundler",
+    "copy-assets": "lnbs-copy-assets",
+    "deploy": "npm run build && lnbs-deploy",
+    "start": "lnbs-start"
   }
 }
