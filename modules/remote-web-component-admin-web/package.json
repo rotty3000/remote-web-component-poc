@@ -7,11 +7,19 @@
     "redux-micro-frontend": "^1.0.1"
   },
   "devDependencies": {
-    "webpack": "^5.20.1",
-    "webpack-cli": "^4.5.0"
+    "babel-cli": "6.26.0",
+    "babel-loader": "7.1.5",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-env": "1.7.0",
+    "liferay-npm-build-support": "^2.22.1",
+    "liferay-npm-bundler": "^2.22.1",
+    "webpack": "4.29.6",
+    "webpack-cli": "3.3.0"
   },
   "scripts": {
-    "build": "npx webpack",
-    "clean": "rm -rf build/resources/main/META-INF/resources/*"
+    "build": "babel --source-maps -d build src && liferay-npm-bundler",
+    "copy-assets": "lnbs-copy-assets"
   }
 }
