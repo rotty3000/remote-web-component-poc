@@ -8,6 +8,7 @@
 **/bin
 **/build
 **/build_gradle
+**/liferay-npm-bundler-report.html
 **/node_modules
 **/test-coverage
 **/test-results

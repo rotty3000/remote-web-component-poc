@@ -95,7 +95,8 @@ public class RemoteWebComponentPortlet extends MVCPortlet {
 			printWriter.append(routerBasePage);
 			printWriter.append("\" router-base-site=\"");
 			printWriter.append(routerBaseSite);
-			printWriter.append("\" store-descriptor=\"Liferay.State\"");
+			printWriter.append("\" statemanager-descriptor=\"StateManager\"");
+			printWriter.append(" authtoken-descriptor=\"Liferay.authToken\"");
 
 			StringBuffer sb = new StringBuffer();
 

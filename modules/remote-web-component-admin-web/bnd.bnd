@@ -5,6 +5,6 @@ Export-Package: com.liferay.remote.web.component.admin.web.configuration
 Import-Package: \
 	com.liferay.portal.kernel.util;version="[9.21.0,10.0.0)",\
 	*
-Liferay-JS-Resources-Top-Head: /remote-web-component-admin-web.js
+Liferay-JS-Resources-Top-Head: /remote-web-component-admin-web.js?t=${currenttime}
 Liferay-Top-Head-Weight: 1000
 Web-ContextPath: /remote-web-component-admin-web

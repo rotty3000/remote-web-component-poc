@@ -13,9 +13,10 @@
  */
 
 import { GlobalStore } from 'redux-micro-frontend';
+import * as redux from 'redux';
 
 declare global {
-    interface Window { GlobalStore: any; }
+    interface Window { StateManager: any; }
 }
 
-window.GlobalStore = window.GlobalStore || GlobalStore;
+window.StateManager = window.StateManager || { 'GlobalStore': GlobalStore, ...redux};
