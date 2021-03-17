@@ -17,15 +17,17 @@ package com.liferay.remote.web.component.admin.web.internal;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
 
 import static com.liferay.portal.kernel.util.Validator.isNotNull;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -64,6 +66,8 @@ public class RemoteWebComponentPortletRegistrar {
 			_log.info("Starting remote web component {}", _elementName);
 		}
 
+		// Portlet
+
 		Dictionary<String, Object> componentProperties = new Hashtable<>(properties);
 
 		componentProperties.remove(Constants.SERVICE_PID);
@@ -78,6 +82,7 @@ public class RemoteWebComponentPortletRegistrar {
 			"javax.portlet.preferences",
 			"classpath:/META-INF/portlet-preferences/default-preferences.xml");
 		componentProperties.put("javax.portlet.security-role-ref", "power-user,user");
+		componentProperties.put("javax.portlet.version", "3.0");
 
 		UnicodeProperties customProperties = new UnicodeProperties();
 
@@ -93,34 +98,42 @@ public class RemoteWebComponentPortletRegistrar {
 			}
 		}
 
+		Instant now = Instant.now();
+
+		String[] webComponentJSUrls = _appendTimestamp(
+			_remoteWebComponentConfiguration.webComponentUrl(), now);
+
 		componentProperties.put(
 			"com.liferay.portlet.header-portal-javascript",
-			_remoteWebComponentConfiguration.webComponentUrl());
+			webComponentJSUrls);
 
-		String[] webComponentCSSUrl = _remoteWebComponentConfiguration.webComponentCssUrl();
+		String[] webComponentCSSUrls = _appendTimestamp(
+			_remoteWebComponentConfiguration.webComponentCssUrl(), now);
 
-		if (Validator.isNotNull(webComponentCSSUrl)) {
+		if (webComponentCSSUrls.length > 0) {
 			componentProperties.put(
 				"com.liferay.portlet.header-portal-css",
-				webComponentCSSUrl);
+				webComponentCSSUrls);
 		}
 
-		String displayCategory = isNotNull(
-			_remoteWebComponentConfiguration.portletDisplayCategory()) ?
-				_remoteWebComponentConfiguration.portletDisplayCategory() : "sample";
+		String displayCategory = _remoteWebComponentConfiguration.portletDisplayCategory();
+
+		displayCategory = isNotNull(displayCategory) ? displayCategory : "sample";
 
 		componentProperties.put(
 			"com.liferay.portlet.display-category", "category." + displayCategory);
 		componentProperties.put(
 			"com.liferay.portlet.instanceable",
 			String.valueOf(_remoteWebComponentConfiguration.instanceable()));
-		componentProperties.put(
-			"com.liferay.portlet.single-page-application", "false");
+		//componentProperties.put(
+		//    "com.liferay.portlet.single-page-application", "false");
 		componentProperties.put(
 			"javax.portlet.resource-bundle", _getResourceBundleName());
 
 		_portletInstance = _remoteWebComponentPortletFactory.newInstance(
 			componentProperties);
+
+		// Resource Bundle Loader
 
 		componentProperties = new Hashtable<>(properties);
 
@@ -138,6 +151,8 @@ public class RemoteWebComponentPortletRegistrar {
 		_bundleResourceLoaderInstance =
 			_remoteWebComponentResourceBundleLoaderFactory.newInstance(
 				componentProperties);
+
+		// Friendly URL Mapper
 
 		componentProperties = new Hashtable<>(properties);
 
@@ -172,6 +187,25 @@ public class RemoteWebComponentPortletRegistrar {
 		}
 	}
 
+	private String[] _appendTimestamp(String[] urls, Instant now) {
+		return Stream.of((urls != null) ? urls : EMPTY).filter(
+			Objects::nonNull
+		).map(
+			String::trim
+		).filter(
+			url -> !url.isEmpty()
+		).map(
+			url -> {
+				if (url.indexOf('?') > -1) {
+					return url + "&ts=" + now.toEpochMilli();
+				}
+				else {
+					return url + "?ts=" + now.toEpochMilli();
+				}
+			}
+		).toArray(String[]::new);
+	}
+
 	private String _getPortletName() {
 		final String portletAlias = _remoteWebComponentConfiguration.portletAlias();
 		return PortalUtil.getJsSafePortletId(
@@ -193,6 +227,8 @@ public class RemoteWebComponentPortletRegistrar {
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		RemoteWebComponentPortletRegistrar.class);
+
+	private static final String[] EMPTY = new String[0];
 
 	private volatile ComponentInstance _bundleResourceLoaderInstance;
 	private volatile String _elementName;

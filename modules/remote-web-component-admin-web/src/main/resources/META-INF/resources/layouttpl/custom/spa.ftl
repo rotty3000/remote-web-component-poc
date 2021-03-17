@@ -6,22 +6,31 @@
 	</div>
 
 	<div class="portlet-layout row">
-		<#if themeDisplay??>
-			<#assign permissionChecker = (themeDisplay.getPermissionChecker())!>
-			<#assign layout = (themeDisplay.getLayout())!>
-			<#if permissionChecker?? && layout??>
-				<#if (layoutPermission.contains(permissionChecker, layout, "UPDATE"))!>
-					<#assign locale = themeDisplay.getLocale()>
+		<div class="col-md-12 portlet-column portlet-column-only spa-additional-portlets" id="column-2">
+			<#if themeDisplay??>
+				<#assign permissionChecker = (themeDisplay.getPermissionChecker())!>
+				<#assign layout = (themeDisplay.getLayout())!>
+				<#if permissionChecker?? && layout??>
+					<#if (layoutPermission.contains(permissionChecker, layout, "UPDATE"))!>
+						<#assign hasUpdate = "has-update">
+						<#assign locale = themeDisplay.getLocale()>
 
-					<div>
-						<@liferay.language key="place-portlets-to-be-loaded-via-SPA-routing-bellow-this-line" />
-					</div>
-					<hr />
+						<div class="navbar">
+							<span><@liferay.language key="spa-additional-portlets" /></span>
+							<div class="dropdown">
+								<button class="dropbtn">
+									<@liferay.language key="test-navigation" />
+									<!-- <i class="fa fa-caret-down"></i> -->
+								</button>
+								<div class="dropdown-content" id="spa-additional-portlets-urls">
+								</div>
+							</div>
+						</div>
+					</#if>
 				</#if>
 			</#if>
-		</#if>
-		<div class="col-md-12 portlet-column portlet-column-only" id="column-2">
-			${processor.processColumn("column-2", "portlet-column-content portlet-column-content-only")}
+
+			${processor.processColumn("column-2", "${hasUpdate!} portlet-column-content portlet-column-content-only")}
 		</div>
 	</div>
 </div>

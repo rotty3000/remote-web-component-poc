@@ -23,6 +23,7 @@ import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutRow;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 import aQute.bnd.annotation.metatype.Meta;
+import aQute.bnd.annotation.metatype.Meta.Type;
 
 @DDMForm
 @DDMFormLayout(
@@ -65,7 +66,6 @@ import aQute.bnd.annotation.metatype.Meta;
 							size = 12,
 							value = {
 								"webComponentCssUrl",
-								//"routes",
 								"portletServiceProperties"
 							}
 						)
@@ -76,8 +76,9 @@ import aQute.bnd.annotation.metatype.Meta;
 	}
 )
 @ExtendedObjectClassDefinition(
+	nameArguments = {"elementName", "portletAlias"},
 	category = "widget-tools",
-	factoryInstanceLabelAttribute = "elementName"
+	factoryInstanceLabelAttribute = "name"
 )
 @Meta.OCD(
 	factory = true,
@@ -88,13 +89,14 @@ public interface RemoteWebComponentConfiguration {
 
 	@Meta.AD(
 		name = "name",
-		description = "name-description"
+		description = "name-description",
+		type = Type.String
 	)
 	@DDMFormField(
 		name = "%name",
 		tip = "%name-description",
-		type = "text",
-		required = true
+		required = true,
+		type = "text"
 	)
 	public String name();
 

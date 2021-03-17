@@ -78,9 +78,29 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 			}
 		}
 
-		// Simple render URL with normal state
+		// Render URL with any state and a path
 
-		String baseRoute = instanceable ? "/{instanceId}" : "";
+		String baseRoute = (instanceable ? "/{instanceId}" : "") + "/s/{p_p_state}/{%path:.*}";
+
+		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
+			Route route = router.addRoute(baseRoute);
+
+			route.addImplicitParameter("p_p_lifecycle", "0");
+		}
+
+		// Render URL with any state
+
+		baseRoute = (instanceable ? "/{instanceId}" : "") + "/s/{p_p_state}";
+
+		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
+			Route route = router.addRoute(baseRoute);
+
+			route.addImplicitParameter("p_p_lifecycle", "0");
+		}
+
+		// Simple render URL with normal state and path
+
+		baseRoute = instanceable ? "/{instanceId}" : "/{%path:.*}";
 
 		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
 			Route route = router.addRoute(baseRoute);
@@ -89,24 +109,15 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 			route.addImplicitParameter("p_p_state", WindowState.NORMAL.toString());
 		}
 
-		// Render URL with any state
+		// Simple render URL with normal state
 
-		baseRoute = (instanceable ? "/{instanceId}" : "") + "/{p_p_state}";
-
-		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
-			Route route = router.addRoute(baseRoute);
-
-			route.addImplicitParameter("p_p_lifecycle", "0");
-		}
-
-		// Render URL with any state and a path
-
-		baseRoute = (instanceable ? "/{instanceId}" : "") + "/{p_p_state}/{%path:.*}";
+		baseRoute = instanceable ? "/{instanceId}" : "";
 
 		if (router.getRoutes().stream().map(Route::getPattern).noneMatch(baseRoute::equals)) {
 			Route route = router.addRoute(baseRoute);
 
 			route.addImplicitParameter("p_p_lifecycle", "0");
+			route.addImplicitParameter("p_p_state", WindowState.NORMAL.toString());
 		}
 
 		super.router = router;

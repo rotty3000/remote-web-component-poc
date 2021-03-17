@@ -1,15 +1,15 @@
 {
-  "name": "remote-web-component-admin-web",
-  "version": "1.0.0",
-  "main": "js/index.js",
-  "license": "MIT",
-  "dependencies": {
-    "redux-micro-frontend": "^1.0.1"
-  },
-  "devDependencies": {
-    "@liferay/npm-scripts": "^36.11.0"
-  },
-  "scripts": {
-    "build": "liferay-npm-scripts build"
-  }
+	"name": "remote-web-component-admin-web",
+	"version": "1.0.0",
+	"main": "js/index.js",
+	"license": "MIT",
+	"dependencies": {
+		"redux-micro-frontend": "^1.0.1"
+	},
+	"devDependencies": {
+		"@liferay/npm-scripts": "^36.11.0"
+	},
+	"scripts": {
+		"build": "liferay-npm-scripts build"
+	}
 }
