@@ -54,7 +54,7 @@ public class RemoteWebComponentTopHeadDynamicInclude extends BaseDynamicInclude 
 	}
 
 	@Reference(
-		target = "(osgi.web.symbolicname=com.desjardins.fptc-webc-remote-integration)"
+		target = "(osgi.web.symbolicname=com.liferay.remote.web.component.admin.web)"
 	)
 	private ServletContext _servletContext;
 
