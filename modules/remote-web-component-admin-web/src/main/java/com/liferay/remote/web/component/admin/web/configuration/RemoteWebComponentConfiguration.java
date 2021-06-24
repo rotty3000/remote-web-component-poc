@@ -66,6 +66,7 @@ import aQute.bnd.annotation.metatype.Meta.Type;
 							size = 12,
 							value = {
 								"webComponentCssUrl",
+								"webComponentTopJsUrl",
 								"portletServiceProperties"
 							}
 						)
@@ -134,6 +135,17 @@ public interface RemoteWebComponentConfiguration {
 	public String[] webComponentCssUrl();
 
 	@Meta.AD(
+		name = "web-component-top-js-url",
+		description = "web-component-top-js-url-description",
+		required = false
+	)
+	@DDMFormField(
+		label = "%web-component-top-js-url",
+		tip = "%web-component-top-js-url-description"
+	)
+	public String[] webComponentTopJsUrl();
+
+	@Meta.AD(
 		name = "portlet-alias",
 		description = "portlet-alias-description",
 		required = false
@@ -172,18 +184,5 @@ public interface RemoteWebComponentConfiguration {
 		required = false
 	)
 	public String portletServiceProperties();
-
-//	@Meta.AD(
-//		name = "routes",
-//		description = "routes-description",
-//		deflt = "",
-//		required = false
-//	)
-//	@DDMFormField(
-//		label = "%routes",
-//		tip = "%routes-description",
-//		predefinedValue = ""
-//	)
-	public String[] routes();
 
 }

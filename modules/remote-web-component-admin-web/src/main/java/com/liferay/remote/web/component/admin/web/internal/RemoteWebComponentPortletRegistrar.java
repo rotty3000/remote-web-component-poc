@@ -18,6 +18,7 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.remote.web.component.admin.web.configuration.RemoteWebComponentConfiguration;
+import com.liferay.remote.web.component.admin.web.internal.util.Timestamp;
 
 import static com.liferay.portal.kernel.util.Validator.isNotNull;
 
@@ -26,8 +27,6 @@ import java.time.Instant;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -100,14 +99,14 @@ public class RemoteWebComponentPortletRegistrar {
 
 		Instant now = Instant.now();
 
-		String[] webComponentJSUrls = _appendTimestamp(
+		String[] webComponentJSUrls = Timestamp.append(
 			_remoteWebComponentConfiguration.webComponentUrl(), now);
 
 		componentProperties.put(
 			"com.liferay.portlet.header-portal-javascript",
 			webComponentJSUrls);
 
-		String[] webComponentCSSUrls = _appendTimestamp(
+		String[] webComponentCSSUrls = Timestamp.append(
 			_remoteWebComponentConfiguration.webComponentCssUrl(), now);
 
 		if (webComponentCSSUrls.length > 0) {
@@ -163,6 +162,17 @@ public class RemoteWebComponentPortletRegistrar {
 			_remoteWebComponentFriendlyURLMapperFactory.newInstance(
 				componentProperties);
 
+		// Top Js Dynamic Include
+
+		componentProperties = new Hashtable<>(properties);
+
+		componentProperties.remove(Constants.SERVICE_PID);
+		componentProperties.put("javax.portlet.name", _getPortletName());
+
+		_topJsDynamicInclude =
+			_remoteWebComponentTopJsDynamicInclude.newInstance(
+				componentProperties);
+
 		if (_log.isInfoEnabled()) {
 			_log.info("Started remote web component {}", _elementName);
 		}
@@ -177,33 +187,16 @@ public class RemoteWebComponentPortletRegistrar {
 		_portletInstance.dispose();
 		_bundleResourceLoaderInstance.dispose();
 		_friendlyURLMapperInstance.dispose();
+		_topJsDynamicInclude.dispose();
 
 		_portletInstance = null;
 		_bundleResourceLoaderInstance = null;
 		_friendlyURLMapperInstance = null;
+		_topJsDynamicInclude = null;
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Stopped remote web component {}", _elementName);
 		}
-	}
-
-	private String[] _appendTimestamp(String[] urls, Instant now) {
-		return Stream.of((urls != null) ? urls : EMPTY).filter(
-			Objects::nonNull
-		).map(
-			String::trim
-		).filter(
-			url -> !url.isEmpty()
-		).map(
-			url -> {
-				if (url.indexOf('?') > -1) {
-					return url + "&ts=" + now.toEpochMilli();
-				}
-				else {
-					return url + "?ts=" + now.toEpochMilli();
-				}
-			}
-		).toArray(String[]::new);
 	}
 
 	private String _getPortletName() {
@@ -225,15 +218,17 @@ public class RemoteWebComponentPortletRegistrar {
 	@Reference(target = "(component.factory=remote.web.component.resource.bundle.loader)")
 	private ComponentFactory _remoteWebComponentResourceBundleLoaderFactory;
 
+	@Reference(target = "(component.factory=remote.web.component.top.js.dynamic.include)")
+	private ComponentFactory _remoteWebComponentTopJsDynamicInclude;
+
 	private static final Logger _log = LoggerFactory.getLogger(
 		RemoteWebComponentPortletRegistrar.class);
-
-	private static final String[] EMPTY = new String[0];
 
 	private volatile ComponentInstance _bundleResourceLoaderInstance;
 	private volatile String _elementName;
 	private volatile ComponentInstance _friendlyURLMapperInstance;
 	private volatile ComponentInstance _portletInstance;
+	private volatile ComponentInstance _topJsDynamicInclude;
 	private volatile RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
 
 }

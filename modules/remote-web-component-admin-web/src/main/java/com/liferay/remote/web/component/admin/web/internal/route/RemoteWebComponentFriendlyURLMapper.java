@@ -17,13 +17,10 @@ package com.liferay.remote.web.component.admin.web.internal.route;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.portlet.PortletMode;
 import javax.portlet.WindowState;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -52,31 +49,6 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 
 		boolean instanceable = _remoteWebComponentConfiguration.instanceable();
 		Router router = new RouterImpl();
-
-		if ((_remoteWebComponentConfiguration.routes() == null) ||
-			((_remoteWebComponentConfiguration.routes().length == 1) &&
-			 (_remoteWebComponentConfiguration.routes()[0].length() == 0))) {
-			// skip
-		}
-		else {
-			for (String routePattern : _remoteWebComponentConfiguration.routes()) {
-				if (!validate(routePattern)) {
-					if (_log.isErrorEnabled()) {
-						_log.error(
-							"Invalid route [{}] was specified for web component <{}>",
-							routePattern, _remoteWebComponentConfiguration.elementName());
-					}
-
-					continue;
-				}
-
-				Route route = router.addRoute(instanceable ? "/{instanceId}" + routePattern : routePattern);
-
-				route.addImplicitParameter("p_p_lifecycle", "0");
-				route.addImplicitParameter("p_p_mode", PortletMode.VIEW.toString());
-				route.addImplicitParameter("p_p_state", WindowState.NORMAL.toString());
-			}
-		}
 
 		// Render URL with any state and a path
 
@@ -153,13 +125,6 @@ public class RemoteWebComponentFriendlyURLMapper extends DefaultFriendlyURLMappe
 	public void setRouter(Router router) {
 		// make sure we don't get reset
 	}
-
-	private boolean validate(String routePattern) {
-		return routePattern.startsWith("/") && (routePattern.length() > 1);
-	}
-
-	private static final Logger _log = LoggerFactory.getLogger(
-		RemoteWebComponentFriendlyURLMapper.class);
 
 	private volatile String _mapping;
 	private RemoteWebComponentConfiguration _remoteWebComponentConfiguration;
